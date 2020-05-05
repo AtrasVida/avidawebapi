@@ -1,4 +1,4 @@
-package co.atrasvida.avidawebapi_example.ApiClient
+package co.atrasvida.example.ApiClient
 
 
 import co.atrasvida.avidawebapi_annotations.WebApi

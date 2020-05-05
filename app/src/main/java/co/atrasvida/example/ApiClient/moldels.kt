@@ -1,4 +1,4 @@
-package co.atrasvida.avidawebapi_example.ApiClient
+package co.atrasvida.example.ApiClient
 
 internal data class ReportClickRequest(
     var app_key: String,

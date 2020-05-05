@@ -1,4 +1,4 @@
-package co.atrasvida.avidawebapi_example;
+package co.atrasvida.example;
 
 import android.os.Bundle;
 import android.view.View;
@@ -8,9 +8,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import co.atrasvida.avidawebapi_annotations.BindView;
 
-import co.atrasvida.avidawebapi_annotations.BindView;
 import co.atrasvida.avidawebapi_annotations.OnClick;
-import co.atrasvida.avidawebapi_annotations.WebApi;
 
 public class MainActivity2 extends AppCompatActivity {
 

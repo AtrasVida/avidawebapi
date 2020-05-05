@@ -1,4 +1,4 @@
-package co.atrasvida.avidawebapi_example
+package co.atrasvida.example
 
 import org.junit.Test
 

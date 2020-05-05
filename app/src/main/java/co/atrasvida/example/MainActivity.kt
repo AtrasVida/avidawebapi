@@ -1,10 +1,10 @@
-package co.atrasvida.avidawebapi_example
+package co.atrasvida.example
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import co.atrasvida.avidawebapi_annotations.GreetingGenerator
 //import co.atrasvida.avidawebapi_example.ApiClient.Generated_NetworkApiService
-import co.atrasvida.avidawebapi_example.ApiClient.NetworkApiService
+import co.atrasvida.example.ApiClient.NetworkApiService
 
 @GreetingGenerator
 class MainActivity : AppCompatActivity() {
