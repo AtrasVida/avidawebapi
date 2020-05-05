@@ -1,0 +1,5 @@
+rootProject.name='AvidAWebApi-Example'
+include ':app'
+include ':avidawebapi'
+include ':avidawebapi-compiler'
+include ':avidawebapi-annotations'
