@@ -40,7 +40,6 @@ dependencies {
 
     implementation project(':avidawebapi')
     kapt project(':avidawebapi-compiler')
-    kapt project(':avidawebapi-annotations')
 
 
 

@@ -1,36 +1,64 @@
-package co.atrasvida.avidawebapi.compiler
+package co.atrasvida.avidawebapi.compiler;
 
-import co.atrasvida.avidawebapi_annotations.GreetingGenerator
-import co.atrasvida.avidawebapi_annotations.WebApi
-import com.google.auto.service.AutoService
-import java.io.File
-import javax.annotation.processing.*
-import javax.lang.model.SourceVersion
-import javax.lang.model.element.TypeElement
-import javax.lang.model.type.TypeMirror
-import javax.lang.model.util.ElementFilter
+import com.google.auto.service.AutoService;
 
-@AutoService(Processor::class) // For registering the service
-@SupportedSourceVersion(SourceVersion.RELEASE_8) // to support Java 8
-@SupportedOptions(FileGenerator.KAPT_KOTLIN_GENERATED_OPTION_NAME)
-class FileGenerator : AbstractProcessor() {
+import net.ltgt.gradle.incap.IncrementalAnnotationProcessor;
+import net.ltgt.gradle.incap.IncrementalAnnotationProcessorType;
 
-    override fun getSupportedAnnotationTypes(): MutableSet<String> {
-        return mutableSetOf(GreetingGenerator::class.java.name)
+import java.io.FileWriter;
+import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.annotation.processing.Processor;
+import javax.annotation.processing.RoundEnvironment;
+import javax.lang.model.SourceVersion;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.ElementFilter;
+
+import co.atrasvida.avidawebapi_annotations.WebApi;
+
+
+@AutoService(Processor.class)
+@IncrementalAnnotationProcessor(IncrementalAnnotationProcessorType.DYNAMIC)
+@SuppressWarnings("NullAway")
+public final class AvidAProcessor extends AbstractProcessor {
+
+    @Override
+    public Set<String> getSupportedAnnotationTypes() {
+
+        Set<String> types = new LinkedHashSet<>();
+        for (Class<? extends Annotation> annotation : getSupportedAnnotations()) {
+            types.add(annotation.getCanonicalName());
+        }
+        return types;
     }
 
-    override fun getSupportedSourceVersion(): SourceVersion {
-        return SourceVersion.latest()
+    private Set<Class<? extends Annotation>> getSupportedAnnotations() {
+        Set<Class<? extends Annotation>> annotations = new LinkedHashSet<>();
+        annotations.add(WebApi.class);
+        return annotations;
+    }
+
+    @Override
+
+    public SourceVersion getSupportedSourceVersion() {
+        return SourceVersion.latest();
     }
 
 
-    override fun process(
-        set: MutableSet<out TypeElement>?,
-        roundEnvironment: RoundEnvironment?
-    ): Boolean {
+    @Override
+    public boolean process(Set<? extends TypeElement> set, RoundEnvironment roundEnvironment) {
 
-        for (typeElement in set!!) {
-            System.out.println("------------------------>" + typeElement)
+        for (TypeElement typeElement : set) {
+            System.out.println("------------------------>" + typeElement);
         }
 
         //  roundEnvironment?.getElementsAnnotatedWith(GreetingGenerator::class.java)
@@ -40,118 +68,97 @@ class FileGenerator : AbstractProcessor() {
         //          generateClass(className, pack)
         //      }
 
-        roundEnvironment?.getElementsAnnotatedWith(WebApi::class.java)
-            ?.forEach {
-                var webapi: WebApi = it.getAnnotation(WebApi::class.java)
-                System.out.println("------------->" + webapi.value)
-
-                val className = it.simpleName.toString()
-                val pack = processingEnv.elementUtils.getPackageOf(it).toString()
-                //generateClass(className, pack)
-                //ElementFilter.methodsIn(typeElement.getEnclosedElements())
-
-                var metodsString = getApiClientClassData(className, webapi.baseUrl)
-                for (executableElement in ElementFilter.methodsIn(it.enclosedElements)) {
-
-                    executableElement.getSimpleName()
-                    executableElement.defaultValue
-                    System.out.println("------------->" + executableElement.defaultValue)
-
-                    var parametrString = ""
-                    var parameterSize = executableElement.parameters!!.size
-                    for (i in 0 until parameterSize) {
-                        var parameter = executableElement.parameters!![i]
-                        parametrString += (parameter.simpleName.toString() + ":" + toKatlin(
-                            parameter.asType()
-                        ) + ",")
-                    }
-                    var parametrStringVal = ""
-                    for (i in 0 until parameterSize) {
-                        var parameter = executableElement.parameters!![i]
-                        parametrStringVal += (parameter.simpleName.toString())
-                        if (i < parameterSize - 1) {
-                            parametrStringVal += ","
-                        }
-                    }
-
-                    var returnType =
-                        //handleList
-                        (executableElement.returnType)//.javaClass//.genericSuperclass
-
-                    var javaClass = returnType.toString().substring(
-                        "io.reactivex.Observable<".length,
-                        returnType.toString().lastIndex
-                    )
-
-                    javaClass = javaClass.replace("java.lang.Object", "Any")
-
-                    metodsString +=
-                        "       internal fun ${executableElement.simpleName}( $parametrString onSuccess: ($javaClass) -> Unit) = networkApiService!!\n" +
-                                "             .${executableElement.simpleName}($parametrStringVal)\n" +
-                                "             .compose(configureApiCallObserver())\n" +
-                                "             .subscribeWith(object : MyDisposableObserver<$javaClass>(onSuccess) {})\n\n\n"
-                }
-                generateClass(webapi.value, pack, metodsString)
+        boolean isFirst = true;
+        for (Element it : roundEnvironment.getElementsAnnotatedWith(WebApi.class)) {
+            String pack = processingEnv.getElementUtils().getPackageOf(it).toString();
+            if (isFirst) {
+                getDOClass(pack);
+                getDeserializer(pack);
             }
-        try {
-            getDOClass(
-                processingEnv.elementUtils.getPackageOf(
-                    roundEnvironment?.getElementsAnnotatedWith(
-                        WebApi::class.java
-                    )?.elementAt(0)
-                ).toString()
-            )
-        } catch (e: Exception) {
+
+            WebApi webapi = it.getAnnotation(WebApi.class);
+            System.out.println("------------->" + webapi.value());
+
+            String className = it.getSimpleName().toString();
+
+            //generateClass(className, pack)
+            //ElementFilter.methodsIn(typeElement.getEnclosedElements())
+
+            String metodsString = getApiClientClassData(className, webapi.baseUrl());
+            for (ExecutableElement executableElement : ElementFilter.methodsIn(it.getEnclosedElements())) {
+
+                executableElement.getSimpleName();
+                executableElement.getDefaultValue();
+                System.out.println("------------->" + executableElement.getDefaultValue());
+
+                String parametrString = "";
+                int parameterSize = executableElement.getParameters().size();
+                for (int i = 0; i < parameterSize; i++) {
+                    VariableElement parameter = executableElement.getParameters().get(i);
+                    parametrString += (parameter.getSimpleName().toString() + ":" + toKatlin(
+                            parameter.asType()
+                    ) + ",");
+                }
+                String parametrStringVal = "";
+                for (int i = 0; i < parameterSize; i++) {
+                    VariableElement parameter = executableElement.getParameters().get(i);
+                    parametrStringVal += (parameter.getSimpleName().toString());
+                    if (i < parameterSize - 1) {
+                        parametrStringVal += ",";
+                    }
+                }
+
+                TypeMirror returnType = (executableElement.getReturnType());
+                String javaClass = returnType.toString().substring(
+                        "io.reactivex.Observable<".length(), returnType.toString().length() - 1
+                );
+
+                javaClass = javaClass.replace("java.lang.Object", "Any");
+
+                metodsString +=
+                        "       internal fun " + executableElement.getSimpleName() + "( " + parametrString + " onSuccess: (" + javaClass + ") -> Unit) = networkApiService!!\n" +
+                                "             ." + executableElement.getSimpleName() + "(" + parametrStringVal + ")\n" +
+                                "             .compose(configureApiCallObserver())\n" +
+                                "             .subscribeWith(object : MyDisposableObserver<" + javaClass + ">(onSuccess) {})\n\n\n";
+            }
+            generateClass(webapi.value(), pack, metodsString);
         }
 
-        try {
-            getDeserializer(
-                processingEnv.elementUtils.getPackageOf(
-                    roundEnvironment?.getElementsAnnotatedWith(
-                        WebApi::class.java
-                    )?.elementAt(0)
-                ).toString()
-            )
-        } catch (e: Exception) {
-        }
-        return true
+
+        return true;
     }
 
-    inline fun <reified T> handleList(l: Class<T>) {
-        //T::class.qualifiedName
-        l.javaClass.genericSuperclass
-    }
+   /*     inline fun
 
-    private fun toKatlin(asType: TypeMirror?): String? {
-        var type = asType.toString()
+    <reified T>handleList(l:Class<T>){
+            //T::class.qualifiedName
+            l.javaClass.genericSuperclass
+        }*/
 
-        return when (type) {
-            "int" -> "Int"
-            "java.lang.String" -> "kotlin.String"
-            else -> type
-        }
+    private String toKatlin(TypeMirror asType) {
+        String type = asType.toString();
+
+        if (type.equals("int")) return "Int";
+        else if (type.equals("java.lang.String")) return "kotlin.String";
+        else return type;
 
     }
 
-    private fun generateClass(
-        className: String, pack: String,
-        greeting: String = "Merry Christmas!!"
-    ) {
-        val fileName =className
-        val fileContent = KotlinClassBuilder(fileName, pack, getImports(), greeting).getContent()
+    private void generateClass(String className, String pack, String greeting) {
+        String fileName = className;
+        String fileContent = new KotlinClassBuilder(fileName, pack, getImports(), greeting).getContent();
 
-        val kaptKotlinGeneratedDir = processingEnv.options[KAPT_KOTLIN_GENERATED_OPTION_NAME]
-        val file = File(kaptKotlinGeneratedDir, "$fileName.kt")
-
-        file.writeText(fileContent)
+        //String kaptKotlinGeneratedDir = processingEnv.getOptions().get(KAPT_KOTLIN_GENERATED_OPTION_NAME);
+        FileWr(processingEnv, fileName, fileContent);
+        //writeText(kaptKotlinGeneratedDir + fileName + ".kt", fileContent);
     }
 
-    companion object {
-        const val KAPT_KOTLIN_GENERATED_OPTION_NAME = "kapt.kotlin.generated"
-    }
 
-    private fun getApiClientClassData(className: String,baseApi: String): String {
-        return "private var networkApiService: $className? = null\n" +
+    static final String KAPT_KOTLIN_GENERATED_OPTION_NAME = "kapt.kotlin.generated";
+
+
+    private String getApiClientClassData(String className, String baseApi) {
+        return "private var networkApiService: " + className + "? = null\n" +
                 "    private val ContentType = \"application/json\"\n" +
                 "    private val TAG = \"API_CLIENT\"\n" +
                 "\n" +
@@ -194,7 +201,7 @@ class FileGenerator : AbstractProcessor() {
                 "        if (token != null) {\n" +
                 "            okHttpClientBuilder.addInterceptor { chain ->\n" +
                 "                val request = chain.request().newBuilder()\n" +
-                "                request.addHeader(\"Authorization\", \"Bearer \$token\")\n" +
+                "                request.addHeader(\"Authorization\", \"Bearer $token\")\n" +
                 "                chain.proceed(request.build())\n" +
                 "            }\n" +
                 "        }\n" +
@@ -206,12 +213,12 @@ class FileGenerator : AbstractProcessor() {
                 "\n" +
                 "        // Init Retrofit\n" +
                 "        networkApiService = Retrofit.Builder()\n" +
-                "            .baseUrl(\"$baseApi\")\n" +
+                "            .baseUrl(\"" + baseApi + " \")\n" +
                 "            .client(okHttpClientBuilder.build())\n" +
                 "            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())\n" +
                 "            .addConverterFactory(GsonConverterFactory.create(gsonBuilder.create()))\n" +
                 "            .build()\n" +
-                "            .create($className::class.java)\n" +
+                "            .create(" + className + "::class.java)\n" +
                 "    }\n" +
                 "\n" +
                 "    private fun getToken(): String? {\n" +
@@ -244,11 +251,11 @@ class FileGenerator : AbstractProcessor() {
                 "                    Observable.error<Any?>(throwable)\n" +
                 "                }\n" +
                 "        }\n" +
-                "    }\n"
+                "    }\n";
 
     }
 
-    fun getImports(): String {
+    String getImports() {
         return "import android.util.Log\n" +
                 // "import MyDisposableObserver\n" +
                 "import co.atrasvida.avidawebapi.BuildConfig\n" +
@@ -276,37 +283,36 @@ class FileGenerator : AbstractProcessor() {
                 "import java.net.UnknownHostException\n" +
                 "import java.util.concurrent.TimeUnit\n" +
                 "import java.util.concurrent.TimeoutException\n" +
-                "import kotlin.math.pow"
+                "import kotlin.math.pow";
     }
 
-    fun getDeserializer(pack: String) {
-        var fileContent =
-            "package $pack\n" +
-                    "import com.google.gson.Gson\n" +
-                    "import com.google.gson.JsonDeserializationContext\n" +
-                    "import com.google.gson.JsonDeserializer\n" +
-                    "import com.google.gson.JsonElement\n" +
-                    "import java.lang.reflect.Type\n" +
-                    "\n" +
-                    "open class Deserializer<T> : JsonDeserializer<T> {\n" +
-                    "    override fun deserialize(json: JsonElement?, typeOfT: Type?, context: JsonDeserializationContext?): T {\n" +
-                    "        val content = json!!.asJsonObject\n" +
-                    "\n" +
-                    "        // Deserialize it. You use a new instance of Gson to avoid infinite recursion to this deserializer\n" +
-                    "        return Gson().fromJson(content, typeOfT)\n" +
-                    "    }\n" +
-                    "}"
-        val fileName = "Deserializer"
+    void getDeserializer(String pack) {
+        String fileContent =
+                "package " + pack + "\n" +
+                        "import com.google.gson.Gson\n" +
+                        "import com.google.gson.JsonDeserializationContext\n" +
+                        "import com.google.gson.JsonDeserializer\n" +
+                        "import com.google.gson.JsonElement\n" +
+                        "import java.lang.reflect.Type\n" +
+                        "\n" +
+                        "open class Deserializer<T> : JsonDeserializer<T> {\n" +
+                        "    override fun deserialize(json: JsonElement?, typeOfT: Type?, context: JsonDeserializationContext?): T {\n" +
+                        "        val content = json!!.asJsonObject\n" +
+                        "\n" +
+                        "        // Deserialize it. You use a new instance of Gson to avoid infinite recursion to this deserializer\n" +
+                        "        return Gson().fromJson(content, typeOfT)\n" +
+                        "    }\n" +
+                        "}";
+        String fileName = "Deserializer";
 
-        val kaptKotlinGeneratedDir = processingEnv.options[KAPT_KOTLIN_GENERATED_OPTION_NAME]
-        val file = File(kaptKotlinGeneratedDir, "$fileName.kt")
-
-        file.writeText(fileContent)
+        //String kaptKotlinGeneratedDir = processingEnv.getOptions().get(KAPT_KOTLIN_GENERATED_OPTION_NAME);
+        FileWr(processingEnv, fileName, fileContent);
+        //writeText(kaptKotlinGeneratedDir + fileName + ".kt", fileContent);
     }
 
-    fun getDOClass(pack: String) {
-        var fileContent = "\n" +
-                "package $pack\n" +
+    void getDOClass(String pack) {
+        String fileContent = "\n" +
+                "package " + pack + "\n" +
                 "import android.util.Log\n" +
                 "import com.google.gson.GsonBuilder\n" +
                 "import io.reactivex.disposables.CompositeDisposable\n" +
@@ -330,7 +336,7 @@ class FileGenerator : AbstractProcessor() {
                 "\n" +
                 "        Log.e(\n" +
                 "            TAG,\n" +
-                "            \"onError() called with: throwable = [\$throwable]\"\n" +
+                "            \"onError() called with: throwable = [$throwable] \" \n" +
                 "        )\n" +
                 "        Log.e(\"\", GsonBuilder().setPrettyPrinting().create().toJson(throwable))\n" +
                 "        val throwableClass: Class<*> = throwable.javaClass\n" +
@@ -359,15 +365,32 @@ class FileGenerator : AbstractProcessor() {
                 "    companion object {\n" +
                 "        private const val TAG = \"MyDisposableObserver\"\n" +
                 "    }" +
-                "}\n"
+                "}\n";
 
-        val fileName = "MyDisposableObserver"
+        String fileName = "MyDisposableObserver";
 
-        val kaptKotlinGeneratedDir = processingEnv.options[KAPT_KOTLIN_GENERATED_OPTION_NAME]
-        val file = File(kaptKotlinGeneratedDir, "$fileName.kt")
+        String kaptKotlinGeneratedDir = processingEnv.getOptions().get(KAPT_KOTLIN_GENERATED_OPTION_NAME);
 
-        file.writeText(fileContent)
-
-
+        //writeText(kaptKotlinGeneratedDir + fileName + ".kt", fileContent);
+        FileWr(processingEnv, fileName, fileContent);
     }
+
+
+    public void FileWr(ProcessingEnvironment processingEnv, String fileName, String fileContent) {
+
+        String kaptKotlinGeneratedDir = processingEnv.getOptions().get(KAPT_KOTLIN_GENERATED_OPTION_NAME);
+        // File file = File(kaptKotlinGeneratedDir, fileName+".kt");
+
+        try {
+            FileWriter myWriter = new FileWriter(kaptKotlinGeneratedDir + "/" + fileName + ".kt");
+            myWriter.write(fileContent);
+            myWriter.close();
+            System.out.println("Successfully wrote to the file.");
+        } catch (IOException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
+    }
+
+
 }

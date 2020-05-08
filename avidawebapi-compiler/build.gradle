@@ -14,10 +14,11 @@ sourceSets {
         }
     }
 }
+
 dependencies {
 
     kapt project(":avidawebapi-annotations")
-    implementation project(':avidawebapi-annotations')
+    compileOnly project(':avidawebapi-annotations')
 
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
@@ -25,6 +26,9 @@ dependencies {
 
     implementation "com.google.auto.service:auto-service:1.0-rc4"
     kapt "com.google.auto.service:auto-service:1.0-rc4"
+
+   compileOnly "net.ltgt.gradle.incap:incap-processor:0.2"
+   api "net.ltgt.gradle.incap:incap:0.2"
 
     //implementation project(':avidawebapi-annotations')
 

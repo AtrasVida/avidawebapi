@@ -33,9 +33,7 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     api project(':avidawebapi-annotations')
-   // kapt project(':avidawebapi-compiler')
-
-    annotationProcessor project(':avidawebapi-compiler')
+    //annotationProcessor project(':avidawebapi-compiler')
     kapt project(':avidawebapi-compiler')
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
