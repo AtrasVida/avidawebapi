@@ -2,19 +2,12 @@ apply plugin: 'java-library'
 apply plugin: 'maven'
 
 
-sourceSets {
-    main {
-        java {
-            srcDir "${buildDir.absolutePath}/tmp/kapt/main/kotlinGenerated/"
-        }
-    }
-}
-
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'com.squareup:kotlinpoet:1.5.0'
 
-    //annotationProcessor project(":avidawebapi-annotations")
-    compileOnly project(':avidawebapi-annotations')
+    implementation project(":avidawebapi-annotations")
+    //compileOnly project(':avidawebapi-annotations')
 
     // implementation 'com.squareup:javapoet:1.12.1'
    // implementation "com.google.auto.service:auto-service:1.0-rc4"

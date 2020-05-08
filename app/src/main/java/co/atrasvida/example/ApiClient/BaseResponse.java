@@ -1,29 +1,31 @@
-package co.atrasvida.example.ApiClient
+package co.atrasvida.example.ApiClient;
 
-import com.google.gson.annotations.SerializedName
+import com.google.gson.annotations.SerializedName;
+
+import java.util.List;
 
 
 class BaseResponse<T> {
 
     @SerializedName("IsSuccess")
-    var isSuccess: Boolean = false
+    boolean isSuccess = false;
 
     @SerializedName("Item")
-    var item: T? = null
+    T item = null;
 
     @SerializedName("ListItems")
-    var listItems: List<T>? = null
+    List<T> listItems = null;
 
     @SerializedName("ErrorCode")
-    var errorCode: Int? = null
+    int errorCode = 0;
 
     @SerializedName("Message")
-    var message: String? = null
+    String message = null;
 
     /**
      * this is only for /api/token/ request
      */
     @SerializedName("access")
-    var access: String? = null
+    String access = null;
 
 }

@@ -5,7 +5,11 @@ package co.atrasvida.avidawebapi.compiler;
 //import net.ltgt.gradle.incap.IncrementalAnnotationProcessor;
 //import net.ltgt.gradle.incap.IncrementalAnnotationProcessorType;
 
-import java.io.FileWriter;
+import com.squareup.kotlinpoet.FileSpec;
+import com.squareup.kotlinpoet.KModifier;
+import com.squareup.kotlinpoet.PropertySpec;
+import com.squareup.kotlinpoet.TypeSpec;
+
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.LinkedHashSet;
@@ -13,7 +17,6 @@ import java.util.Set;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
-import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
@@ -378,16 +381,33 @@ public final class AvidAProcessor extends AbstractProcessor {
 
     public void FileWr(ProcessingEnvironment processingEnv, String fileName, String fileContent) {
 
-        String kaptKotlinGeneratedDir = processingEnv.getOptions().get(KAPT_KOTLIN_GENERATED_OPTION_NAME);
+        //String kaptKotlinGeneratedDir = processingEnv.getOptions().get(KAPT_KOTLIN_GENERATED_OPTION_NAME);
         // File file = File(kaptKotlinGeneratedDir, fileName+".kt");
 
+        //  try {
+        //      FileWriter myWriter = new FileWriter(kaptKotlinGeneratedDir + "/" + fileName + ".kt");
+        //      myWriter.write(fileContent);
+        //      myWriter.close();
+        //      System.out.println("Successfully wrote to the file.");
+        //  } catch (IOException e) {
+        //      System.out.println("An error occurred.");
+        //      e.printStackTrace();
+        //  }
+
+        PropertySpec android = PropertySpec.builder("android", String.class)
+                .addModifiers(KModifier.PRIVATE)
+                .build();
+
+        TypeSpec kotlinclass = TypeSpec.classBuilder("HelloWorld")
+                .addProperty(android)
+                .build();
+
+        FileSpec kotlinFile = FileSpec.builder("com.example.helloworld", "HelloWorld")
+                .addType(kotlinclass)
+                .build();
         try {
-            FileWriter myWriter = new FileWriter(kaptKotlinGeneratedDir + "/" + fileName + ".kt");
-            myWriter.write(fileContent);
-            myWriter.close();
-            System.out.println("Successfully wrote to the file.");
+            kotlinFile.writeTo(processingEnv.getFiler());
         } catch (IOException e) {
-            System.out.println("An error occurred.");
             e.printStackTrace();
         }
     }
