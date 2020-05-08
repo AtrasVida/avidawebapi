@@ -1,9 +1,9 @@
 package co.atrasvida.avidawebapi.compiler;
 
-import com.google.auto.service.AutoService;
-
-import net.ltgt.gradle.incap.IncrementalAnnotationProcessor;
-import net.ltgt.gradle.incap.IncrementalAnnotationProcessorType;
+//import com.google.auto.service.AutoService;
+//
+//import net.ltgt.gradle.incap.IncrementalAnnotationProcessor;
+//import net.ltgt.gradle.incap.IncrementalAnnotationProcessorType;
 
 import java.io.FileWriter;
 import java.io.IOException;
