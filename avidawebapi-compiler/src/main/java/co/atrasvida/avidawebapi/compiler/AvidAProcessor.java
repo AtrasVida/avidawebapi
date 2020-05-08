@@ -26,9 +26,9 @@ import javax.lang.model.util.ElementFilter;
 import co.atrasvida.avidawebapi_annotations.WebApi;
 
 
-@AutoService(Processor.class)
-@IncrementalAnnotationProcessor(IncrementalAnnotationProcessorType.DYNAMIC)
-@SuppressWarnings("NullAway")
+//@AutoService(Processor.class)
+//@IncrementalAnnotationProcessor(IncrementalAnnotationProcessorType.DYNAMIC)
+//@SuppressWarnings("NullAway")
 public final class AvidAProcessor extends AbstractProcessor {
 
     @Override
