@@ -1,9 +1,9 @@
 package co.atrasvida.avidawebapi.compiler;
 
-//import com.google.auto.service.AutoService;
-//
-//import net.ltgt.gradle.incap.IncrementalAnnotationProcessor;
-//import net.ltgt.gradle.incap.IncrementalAnnotationProcessorType;
+import com.google.auto.service.AutoService;
+
+import net.ltgt.gradle.incap.IncrementalAnnotationProcessor;
+import net.ltgt.gradle.incap.IncrementalAnnotationProcessorType;
 
 import java.io.OutputStream;
 import java.util.Arrays;
@@ -14,6 +14,7 @@ import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
@@ -32,9 +33,9 @@ import co.atrasvida.avidawebapi_annotations.OnClick;
 import co.atrasvida.avidawebapi_annotations.WebApi;
 
 
-//@AutoService(Processor.class)
-//@IncrementalAnnotationProcessor(IncrementalAnnotationProcessorType.DYNAMIC)
-//@SuppressWarnings("NullAway")
+@AutoService(Processor.class)
+@IncrementalAnnotationProcessor(IncrementalAnnotationProcessorType.DYNAMIC)
+@SuppressWarnings("NullAway")
 public final class AvidAProcessor extends AbstractProcessor {
 
     private Filer filer;
@@ -67,10 +68,10 @@ public final class AvidAProcessor extends AbstractProcessor {
         for (Element it : roundEnvironment.getElementsAnnotatedWith(WebApi.class)) {
             String pack = processingEnv.getElementUtils().getPackageOf(it).toString();
             if (isFirst) {
-                isFirst=false;
+                isFirst = false;
 
-                FileWr(pack, "MyDisposableObserver",   getDOClass(pack), roundEnvironment,it);
-                FileWr(pack, "Deserializer",    getDeserializer(pack), roundEnvironment,it);
+                FileWr(pack, "MyDisposableObserver", getDOClass(pack), roundEnvironment, it);
+                FileWr(pack, "Deserializer", getDeserializer(pack), roundEnvironment, it);
 
             }
 
@@ -123,7 +124,7 @@ public final class AvidAProcessor extends AbstractProcessor {
             String fileName = webapi.value();
             String fileContent = new KotlinClassBuilder(fileName, pack, getImports(), metodsString).getContent();
 
-            FileWr(pack, fileName, fileContent, roundEnvironment,it);
+            FileWr(pack, fileName, fileContent, roundEnvironment, it);
         }
 
 
@@ -288,7 +289,7 @@ public final class AvidAProcessor extends AbstractProcessor {
         String fileName = "Deserializer";
 
 
-      return fileContent;
+        return fileContent;
 
     }
 
@@ -351,11 +352,11 @@ public final class AvidAProcessor extends AbstractProcessor {
 
         String fileName = "MyDisposableObserver";
 
-     return fileContent;
+        return fileContent;
     }
 
 
-    public void FileWr(String pack, String fileName, String fileContent, RoundEnvironment roundEnvironment,Element it) {
+    public void FileWr(String pack, String fileName, String fileContent, RoundEnvironment roundEnvironment, Element it) {
 
 
         try {
