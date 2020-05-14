@@ -21,11 +21,11 @@ class KotlinClassBuilder {
 
     String getContent() {
         String contentTemplate =
-                "        package " + packageName +
-                        "        " + imports +
-                        "        class " + className + ": Consumer<Throwable> {" +
-                        "             " + greeting +
-                        "        }";
+                "package " + packageName +"\n" +
+                        imports + "\n" +
+                        "class " + className + ": Consumer<Throwable> {" + "\n" +
+                        "    " + greeting +"\n" +
+                        "}";
         return contentTemplate;
     }
 

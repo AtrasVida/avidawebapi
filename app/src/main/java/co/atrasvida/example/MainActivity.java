@@ -3,6 +3,7 @@ package co.atrasvida.example;
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import co.atrasvida.avidawebapi.example.R;
+import co.atrasvida.avidawebapi_annotations.WebApi;
 
 
 class MainActivity extends AppCompatActivity {
@@ -18,6 +19,10 @@ class MainActivity extends AppCompatActivity {
         // Binding.bind(this)
         ///Generated_NetworkApiService().getAd(0,0){}
 
+
+    }
+
+    public void sawa(){
 
     }
 

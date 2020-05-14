@@ -5,17 +5,14 @@ package co.atrasvida.avidawebapi.compiler;
 //import net.ltgt.gradle.incap.IncrementalAnnotationProcessor;
 //import net.ltgt.gradle.incap.IncrementalAnnotationProcessorType;
 
-import com.squareup.kotlinpoet.FileSpec;
-import com.squareup.kotlinpoet.KModifier;
-import com.squareup.kotlinpoet.PropertySpec;
-import com.squareup.kotlinpoet.TypeSpec;
-
-import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.util.LinkedHashSet;
+import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.Set;
+import java.util.TreeSet;
 
 import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.Filer;
+import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
@@ -25,7 +22,13 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
+import javax.lang.model.util.Elements;
+import javax.tools.FileObject;
+import javax.tools.StandardLocation;
 
+import co.atrasvida.avidawebapi_annotations.BindView;
+import co.atrasvida.avidawebapi_annotations.Keep;
+import co.atrasvida.avidawebapi_annotations.OnClick;
 import co.atrasvida.avidawebapi_annotations.WebApi;
 
 
@@ -34,20 +37,16 @@ import co.atrasvida.avidawebapi_annotations.WebApi;
 //@SuppressWarnings("NullAway")
 public final class AvidAProcessor extends AbstractProcessor {
 
+    private Filer filer;
+    private Messager messager;
+    private Elements elementUtils;
+
     @Override
-    public Set<String> getSupportedAnnotationTypes() {
-
-        Set<String> types = new LinkedHashSet<>();
-        for (Class<? extends Annotation> annotation : getSupportedAnnotations()) {
-            types.add(annotation.getCanonicalName());
-        }
-        return types;
-    }
-
-    private Set<Class<? extends Annotation>> getSupportedAnnotations() {
-        Set<Class<? extends Annotation>> annotations = new LinkedHashSet<>();
-        annotations.add(WebApi.class);
-        return annotations;
+    public synchronized void init(ProcessingEnvironment processingEnv) {
+        super.init(processingEnv);
+        filer = processingEnv.getFiler();
+        messager = processingEnv.getMessager();
+        elementUtils = processingEnv.getElementUtils();
     }
 
     @Override
@@ -64,26 +63,22 @@ public final class AvidAProcessor extends AbstractProcessor {
             System.out.println("------------------------>" + typeElement);
         }
 
-        //  roundEnvironment?.getElementsAnnotatedWith(GreetingGenerator::class.java)
-        //      ?.forEach {
-        //          val className = it.simpleName.toString()
-        //          val pack = processingEnv.elementUtils.getPackageOf(it).toString()
-        //          generateClass(className, pack)
-        //      }
-
         boolean isFirst = true;
         for (Element it : roundEnvironment.getElementsAnnotatedWith(WebApi.class)) {
             String pack = processingEnv.getElementUtils().getPackageOf(it).toString();
             if (isFirst) {
-                getDOClass(pack);
-                getDeserializer(pack);
+                isFirst=false;
+
+                FileWr(pack, "MyDisposableObserver",   getDOClass(pack), roundEnvironment,it);
+                FileWr(pack, "Deserializer",    getDeserializer(pack), roundEnvironment,it);
+
             }
 
             WebApi webapi = it.getAnnotation(WebApi.class);
             System.out.println("------------->" + webapi.value());
 
             String className = it.getSimpleName().toString();
-
+            System.out.println("------------->" + className);
             //generateClass(className, pack)
             //ElementFilter.methodsIn(typeElement.getEnclosedElements())
 
@@ -124,19 +119,16 @@ public final class AvidAProcessor extends AbstractProcessor {
                                 "             .compose(configureApiCallObserver())\n" +
                                 "             .subscribeWith(object : MyDisposableObserver<" + javaClass + ">(onSuccess) {})\n\n\n";
             }
-            generateClass(webapi.value(), pack, metodsString);
+
+            String fileName = webapi.value();
+            String fileContent = new KotlinClassBuilder(fileName, pack, getImports(), metodsString).getContent();
+
+            FileWr(pack, fileName, fileContent, roundEnvironment,it);
         }
 
 
         return true;
     }
-
-   /*     inline fun
-
-    <reified T>handleList(l:Class<T>){
-            //T::class.qualifiedName
-            l.javaClass.genericSuperclass
-        }*/
 
     private String toKatlin(TypeMirror asType) {
         String type = asType.toString();
@@ -146,19 +138,6 @@ public final class AvidAProcessor extends AbstractProcessor {
         else return type;
 
     }
-
-    private void generateClass(String className, String pack, String greeting) {
-        String fileName = className;
-        String fileContent = new KotlinClassBuilder(fileName, pack, getImports(), greeting).getContent();
-
-        //String kaptKotlinGeneratedDir = processingEnv.getOptions().get(KAPT_KOTLIN_GENERATED_OPTION_NAME);
-        FileWr(processingEnv, fileName, fileContent);
-        //writeText(kaptKotlinGeneratedDir + fileName + ".kt", fileContent);
-    }
-
-
-    static final String KAPT_KOTLIN_GENERATED_OPTION_NAME = "kapt.kotlin.generated";
-
 
     private String getApiClientClassData(String className, String baseApi) {
         return "private var networkApiService: " + className + "? = null\n" +
@@ -289,7 +268,7 @@ public final class AvidAProcessor extends AbstractProcessor {
                 "import kotlin.math.pow";
     }
 
-    void getDeserializer(String pack) {
+    String getDeserializer(String pack) {
         String fileContent =
                 "package " + pack + "\n" +
                         "import com.google.gson.Gson\n" +
@@ -308,12 +287,12 @@ public final class AvidAProcessor extends AbstractProcessor {
                         "}";
         String fileName = "Deserializer";
 
-        //String kaptKotlinGeneratedDir = processingEnv.getOptions().get(KAPT_KOTLIN_GENERATED_OPTION_NAME);
-        FileWr(processingEnv, fileName, fileContent);
-        //writeText(kaptKotlinGeneratedDir + fileName + ".kt", fileContent);
+
+      return fileContent;
+
     }
 
-    void getDOClass(String pack) {
+    String getDOClass(String pack) {
         String fileContent = "\n" +
                 "package " + pack + "\n" +
                 "import android.util.Log\n" +
@@ -372,45 +351,34 @@ public final class AvidAProcessor extends AbstractProcessor {
 
         String fileName = "MyDisposableObserver";
 
-        String kaptKotlinGeneratedDir = processingEnv.getOptions().get(KAPT_KOTLIN_GENERATED_OPTION_NAME);
-
-        //writeText(kaptKotlinGeneratedDir + fileName + ".kt", fileContent);
-        FileWr(processingEnv, fileName, fileContent);
+     return fileContent;
     }
 
 
-    public void FileWr(ProcessingEnvironment processingEnv, String fileName, String fileContent) {
+    public void FileWr(String pack, String fileName, String fileContent, RoundEnvironment roundEnvironment,Element it) {
 
-        //String kaptKotlinGeneratedDir = processingEnv.getOptions().get(KAPT_KOTLIN_GENERATED_OPTION_NAME);
-        // File file = File(kaptKotlinGeneratedDir, fileName+".kt");
 
-        //  try {
-        //      FileWriter myWriter = new FileWriter(kaptKotlinGeneratedDir + "/" + fileName + ".kt");
-        //      myWriter.write(fileContent);
-        //      myWriter.close();
-        //      System.out.println("Successfully wrote to the file.");
-        //  } catch (IOException e) {
-        //      System.out.println("An error occurred.");
-        //      e.printStackTrace();
-        //  }
-
-        PropertySpec android = PropertySpec.builder("android", String.class)
-                .addModifiers(KModifier.PRIVATE)
-                .build();
-
-        TypeSpec kotlinclass = TypeSpec.classBuilder("HelloWorld")
-                .addProperty(android)
-                .build();
-
-        FileSpec kotlinFile = FileSpec.builder("com.example.helloworld", "HelloWorld")
-                .addType(kotlinclass)
-                .build();
         try {
-            kotlinFile.writeTo(processingEnv.getFiler());
-        } catch (IOException e) {
+
+            FileObject filerSourceFile = processingEnv.getFiler().createResource(StandardLocation.SOURCE_OUTPUT,
+                    pack, fileName + ".kt", it);
+
+            OutputStream outputStream = filerSourceFile.openOutputStream();
+            outputStream.write(fileContent.getBytes());
+            outputStream.flush();
+            outputStream.close();
+
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-
+    @Override
+    public Set<String> getSupportedAnnotationTypes() {
+        return new TreeSet<>(Arrays.asList(
+                WebApi.class.getCanonicalName(),
+                BindView.class.getCanonicalName(),
+                OnClick.class.getCanonicalName(),
+                Keep.class.getCanonicalName()));
+    }
 }
