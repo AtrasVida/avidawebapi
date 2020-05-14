@@ -21,6 +21,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.MirroredTypeException;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
@@ -76,34 +77,39 @@ public final class AvidAProcessor extends AbstractProcessor {
             }
 
             WebApi webapi = it.getAnnotation(WebApi.class);
-            System.out.println("------------->" + webapi.value());
+            String configClassName = "";
+            try {
+                Class a = webapi.config(); // this should throw
+            } catch (MirroredTypeException mte) {
+                configClassName = mte.getTypeMirror().toString();
+                System.out.println("------------->" + mte.getTypeMirror());
+            }
 
             String className = it.getSimpleName().toString();
             System.out.println("------------->" + className);
-            //generateClass(className, pack)
-            //ElementFilter.methodsIn(typeElement.getEnclosedElements())
 
-            String metodsString = getApiClientClassData(className, webapi.baseUrl());
+
+            StringBuilder metodsString = new StringBuilder(getApiClientClassData(className, configClassName));
             for (ExecutableElement executableElement : ElementFilter.methodsIn(it.getEnclosedElements())) {
 
                 executableElement.getSimpleName();
                 executableElement.getDefaultValue();
                 System.out.println("------------->" + executableElement.getDefaultValue());
 
-                String parametrString = "";
+                StringBuilder parametrString = new StringBuilder();
                 int parameterSize = executableElement.getParameters().size();
                 for (int i = 0; i < parameterSize; i++) {
                     VariableElement parameter = executableElement.getParameters().get(i);
-                    parametrString += (parameter.getSimpleName().toString() + ":" + toKatlin(
+                    parametrString.append(parameter.getSimpleName().toString()).append(":").append(toKatlin(
                             parameter.asType()
-                    ) + ",");
+                    )).append(",");
                 }
-                String parametrStringVal = "";
+                StringBuilder parametrStringVal = new StringBuilder();
                 for (int i = 0; i < parameterSize; i++) {
                     VariableElement parameter = executableElement.getParameters().get(i);
-                    parametrStringVal += (parameter.getSimpleName().toString());
+                    parametrStringVal.append(parameter.getSimpleName().toString());
                     if (i < parameterSize - 1) {
-                        parametrStringVal += ",";
+                        parametrStringVal.append(",");
                     }
                 }
 
@@ -114,15 +120,11 @@ public final class AvidAProcessor extends AbstractProcessor {
 
                 javaClass = javaClass.replace("java.lang.Object", "Any");
 
-                metodsString +=
-                        "       internal fun " + executableElement.getSimpleName() + "( " + parametrString + " onSuccess: (" + javaClass + ") -> Unit) = networkApiService!!\n" +
-                                "             ." + executableElement.getSimpleName() + "(" + parametrStringVal + ")\n" +
-                                "             .compose(configureApiCallObserver())\n" +
-                                "             .subscribeWith(object : MyDisposableObserver<" + javaClass + ">(onSuccess) {})\n\n\n";
+                metodsString.append("       internal fun ").append(executableElement.getSimpleName()).append("( ").append(parametrString).append(" onSuccess: (").append(javaClass).append(") -> Unit) = networkApiService!!\n").append("             .").append(executableElement.getSimpleName()).append("(").append(parametrStringVal).append(")\n").append("             .compose(configureApiCallObserver())\n").append("             .subscribeWith(object : MyDisposableObserver<").append(javaClass).append(">(onSuccess) {})\n\n\n");
             }
 
             String fileName = webapi.value();
-            String fileContent = new KotlinClassBuilder(fileName, pack, getImports(), metodsString).getContent();
+            String fileContent = new KotlinClassBuilder(fileName, pack, getImports(pack), metodsString.toString()).getContent();
 
             FileWr(pack, fileName, fileContent, roundEnvironment, it);
         }
@@ -140,10 +142,12 @@ public final class AvidAProcessor extends AbstractProcessor {
 
     }
 
-    private String getApiClientClassData(String className, String baseApi) {
+    private String getApiClientClassData(String className, String conf) {
         return "private var networkApiService: " + className + "? = null\n" +
                 "    private val ContentType = \"application/json\"\n" +
                 "    private val TAG = \"API_CLIENT\"\n" +
+                "    private var needToken: Boolean = true \n" +
+                "    private var conf = " + conf + "()\n" +
                 "\n" +
                 "    @Throws(Exception::class)\n" +
                 "    override fun accept(throwable: Throwable) {\n" +
@@ -169,22 +173,27 @@ public final class AvidAProcessor extends AbstractProcessor {
                 "    }\n" +
                 "\n" +
                 "\n" +
+                "    constructor()\n" +
+                "\n" +
+                "    constructor(needToken: Boolean) {\n" +
+                "        this.needToken = needToken\n" +
+                "    }\n" +
                 "    init {\n" +
                 "        val logging = HttpLoggingInterceptor()\n" +
-                "        if (BuildConfig.DEBUG) {\n" +
+                "        if (conf.isDebugMode()) {\n" +
                 "            logging.level = HttpLoggingInterceptor.Level.BODY\n" +
                 "        }\n" +
                 "        var okHttpClientBuilder = OkHttpClient.Builder()\n" +
                 "            .addInterceptor(logging)\n" +
-                "            .readTimeout(20, TimeUnit.SECONDS)\n" +
-                "            .connectTimeout(20, TimeUnit.SECONDS)\n" +
-                "            .writeTimeout(30, TimeUnit.SECONDS)\n" +
+                "            .readTimeout(conf.getReadTimeout(), TimeUnit.SECONDS)\n" +
+                "            .connectTimeout(conf.getConnectTimeout(), TimeUnit.SECONDS)\n" +
+                "            .writeTimeout(conf.getWriteTimeout(), TimeUnit.SECONDS)\n" +
                 "\n" +
-                "        val token = getToken()\n" +
+                "        val token = conf.getToken()\n" +
                 "        if (token != null) {\n" +
                 "            okHttpClientBuilder.addInterceptor { chain ->\n" +
                 "                val request = chain.request().newBuilder()\n" +
-                "                request.addHeader(\"Authorization\", \"Bearer $token\")\n" +
+                "                request.addHeader(\"Authorization\", token)\n" +
                 "                chain.proceed(request.build())\n" +
                 "            }\n" +
                 "        }\n" +
@@ -192,11 +201,11 @@ public final class AvidAProcessor extends AbstractProcessor {
                 "        // Config Gson\n" +
                 "        val gsonBuilder = GsonBuilder()\n" +
                 "        gsonBuilder.setFieldNamingPolicy(FieldNamingPolicy.IDENTITY)\n" +
-                "        gsonBuilder.registerTypeAdapter(BaseResponse::class.java, Deserializer<BaseResponse<Any>>())\n" +
+                "        gsonBuilder.registerTypeAdapter(conf.getBaseModel(), Deserializer<BaseResponse<Any>>())\n" +
                 "\n" +
                 "        // Init Retrofit\n" +
                 "        networkApiService = Retrofit.Builder()\n" +
-                "            .baseUrl(\"" + baseApi + " \")\n" +
+                "            .baseUrl(conf.getBaseUrl()" + " )\n" +
                 "            .client(okHttpClientBuilder.build())\n" +
                 "            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())\n" +
                 "            .addConverterFactory(GsonConverterFactory.create(gsonBuilder.create()))\n" +
@@ -238,18 +247,13 @@ public final class AvidAProcessor extends AbstractProcessor {
 
     }
 
-    String getImports() {
+    String getImports(String pack) {
         return "import android.util.Log\n" +
                 // "import MyDisposableObserver\n" +
                 "import co.atrasvida.avidawebapi.BuildConfig\n" +
                 "import com.google.gson.FieldNamingPolicy\n" +
                 "import com.google.gson.GsonBuilder\n" +
                 "import com.google.gson.JsonSyntaxException\n" +
-                //"import com.pintoads.himasdk.BuildConfig\n" +
-                //"import com.pintoads.himasdk.webservice.models.AppKysResponse\n" +
-                //"import com.pintoads.himasdk.webservice.models.BaseResponse\n" +
-                //"import com.pintoads.himasdk.webservice.models.ReportClickRequest\n" +
-                //"import com.pintoads.himasdk.webservice.models.RequestAdModel\n" +
                 "import io.reactivex.Observable\n" +
                 "import io.reactivex.ObservableSource\n" +
                 "import io.reactivex.ObservableTransformer\n" +
@@ -356,11 +360,9 @@ public final class AvidAProcessor extends AbstractProcessor {
     }
 
 
-    public void FileWr(String pack, String fileName, String fileContent, RoundEnvironment roundEnvironment, Element it) {
-
+    private void FileWr(String pack, String fileName, String fileContent, RoundEnvironment roundEnvironment, Element it) {
 
         try {
-
             FileObject filerSourceFile = processingEnv.getFiler().createResource(StandardLocation.SOURCE_OUTPUT,
                     pack, fileName + ".kt", it);
 
