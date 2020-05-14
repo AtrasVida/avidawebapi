@@ -189,12 +189,14 @@ public final class AvidAProcessor extends AbstractProcessor {
                 "            .connectTimeout(conf.getConnectTimeout(), TimeUnit.SECONDS)\n" +
                 "            .writeTimeout(conf.getWriteTimeout(), TimeUnit.SECONDS)\n" +
                 "\n" +
-                "        val token = conf.getToken()\n" +
-                "        if (token != null) {\n" +
-                "            okHttpClientBuilder.addInterceptor { chain ->\n" +
-                "                val request = chain.request().newBuilder()\n" +
-                "                request.addHeader(\"Authorization\", token)\n" +
-                "                chain.proceed(request.build())\n" +
+                "        if (needToken) {\n"+
+                "            val token = conf.getToken()\n" +
+                "            if (token != null) {\n" +
+                "                okHttpClientBuilder.addInterceptor { chain ->\n" +
+                "                    val request = chain.request().newBuilder()\n" +
+                "                    request.addHeader(\"Authorization\", token)\n" +
+                "                    chain.proceed(request.build())\n" +
+                "                }\n" +
                 "            }\n" +
                 "        }\n" +
                 "\n" +

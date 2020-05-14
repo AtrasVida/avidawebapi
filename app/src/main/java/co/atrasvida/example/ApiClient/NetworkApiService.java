@@ -5,7 +5,7 @@ import co.atrasvida.avidawebapi_annotations.WebApi;
 import io.reactivex.Observable;
 import retrofit2.http.GET;
 
-@WebApi(value = "ApiService", config = ApiConfig.class)
+//@WebApi(value = "ApiService", config = ApiConfig.class)
 interface NetworkApiService {
 
     @GET("/api/user_info/")
