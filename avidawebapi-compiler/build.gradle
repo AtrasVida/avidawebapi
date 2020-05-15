@@ -1,17 +1,27 @@
 apply plugin: 'java-library'
 apply plugin: 'maven'
+apply plugin: 'kotlin'
+apply plugin: 'kotlin-kapt'
+
+
+kapt {
+    generateStubs = true
+}
 
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+
     implementation 'com.squareup:kotlinpoet:1.5.0'
 
-    implementation project(":avidawebapi-annotations")
+    kapt project(":avidawebapi-annotations")
+    implementation project(':avidawebapi-annotations')
 
 
     // implementation 'com.squareup:javapoet:1.12.1'
     implementation "com.google.auto.service:auto-service:1.0-rc4"
-    annotationProcessor "com.google.auto.service:auto-service:1.0-rc4"
+    kapt "com.google.auto.service:auto-service:1.0-rc4"
     compileOnly "net.ltgt.gradle.incap:incap-processor:0.2"
     api "net.ltgt.gradle.incap:incap:0.2"
 

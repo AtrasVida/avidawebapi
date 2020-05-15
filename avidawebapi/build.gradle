@@ -1,5 +1,9 @@
 apply plugin: 'com.android.library'
 apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
+
 group = 'com.github.AtrasVida'
 
 
@@ -30,9 +34,12 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     api project(':avidawebapi-annotations')
-    //annotationProcessor project(':avidawebapi-compiler')
-    annotationProcessor project(':avidawebapi-compiler')
 
+    annotationProcessor project(':avidawebapi-compiler')
+    kapt project(':avidawebapi-compiler')
+
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'androidx.core:core-ktx:1.2.0'
     testImplementation 'junit:junit:4.12'
@@ -40,4 +47,8 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 
 
+
+    // Room
+    implementation 'androidx.room:room-runtime:2.2.3'
+    kapt 'androidx.room:room-compiler:2.2.3'
 }
