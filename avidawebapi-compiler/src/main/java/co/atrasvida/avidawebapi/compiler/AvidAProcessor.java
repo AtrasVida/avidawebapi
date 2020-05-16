@@ -73,6 +73,9 @@ public final class AvidAProcessor extends AbstractProcessor {
 
                 FileWr(pack, "MyDisposableObserver", getDOClass(pack), roundEnvironment, it);
                 FileWr(pack, "Deserializer", getDeserializer(pack), roundEnvironment, it);
+                FileWr(pack, "AvidaAppDatabases", getDatabaseClass(pack), roundEnvironment, it);
+                FileWr(pack, "MCashDao", getMCashDaoClass(pack), roundEnvironment, it);
+                FileWr(pack, "MCash", getMCashClass(pack), roundEnvironment, it);
 
             }
 
@@ -115,12 +118,55 @@ public final class AvidAProcessor extends AbstractProcessor {
 
                 TypeMirror returnType = (executableElement.getReturnType());
                 String javaClass = returnType.toString().substring(
-                        "io.reactivex.Observable<".length(), returnType.toString().length() - 1
+                        "io.reactivex.Observable<" .length(), returnType.toString().length() - 1
                 );
 
                 javaClass = javaClass.replace("java.lang.Object", "Any");
 
-                metodsString.append("       internal fun ").append(executableElement.getSimpleName()).append("( ").append(parametrString).append(" onSuccess: (").append(javaClass).append(") -> Unit) = networkApiService!!\n").append("             .").append(executableElement.getSimpleName()).append("(").append(parametrStringVal).append(")\n").append("             .compose(configureApiCallObserver())\n").append("             .subscribeWith(object : MyDisposableObserver<").append(javaClass).append(">(onSuccess) {})\n\n\n");
+                metodsString.append("       internal fun ").append(executableElement.getSimpleName())
+                        .append("( ").append(parametrString)
+                        .append(" onSuccess: (").append(javaClass).append(") -> Unit) ")
+                        .append(": MyDisposableObserver<").append(javaClass).append(">{\n")
+                        .append("        var mToken= \"" + executableElement.getSimpleName() + "\"\n\n")
+                        .append("        var objByToken = AvidaAppDatabases.getInstance()!!" +
+                                ".mCashDao().getObjByToken(mToken)\n" +
+                                "\n" +
+                                "        var haveObj = false\n" +
+                                "        if (objByToken != null) {\n" +
+                                "            haveObj = true\n" +
+                                "            val e  = Gson().fromJson(\n" +
+                                "                objByToken.data_val,\n" +
+                                "               " + configClassName + " ().getBaseModel().javaClass\n" +
+                                "            )\n" +
+                                "            onSuccess(e as  " + javaClass + ")\n" +
+                                "        }\n\n")
+
+                        .append("        var sb = object : MyDisposableObserver<" + javaClass + ">(onSuccess) {\n" +
+                                "            override fun onNext(t: " + javaClass + ") {\n" +
+                                "                super.onNext(t)\n" +
+                                "\n" +
+                                "                var jsonStr = Gson().toJson(t)\n" +
+                                "\n" +
+                                "                if (haveObj) {\n" +
+                                "                    AvidaAppDatabases.getInstance()!!.mCashDao()\n" +
+                                "                        .updateObj(mToken , jsonStr)\n" +
+                                "                } else {\n" +
+                                "                    AvidaAppDatabases.getInstance()!!.mCashDao()\n" +
+                                "                        .insert(MCash(0, mToken , jsonStr))\n" +
+                                "                }\n" +
+                                "            }\n" +
+                                "        }\n\n")
+                        .append("        return networkApiService!!." + executableElement.getSimpleName() + "() \n" +
+                                "            .compose(configureApiCallObserver())\n" +
+                                "            .subscribeWith(sb)\n" +
+                                "        }");
+
+                      /*  .append("networkApiService!!\n")
+                        .append("             .").append(executableElement.getSimpleName())
+                        .append("(").append(parametrStringVal).append(")\n")
+                        .append("             .compose(configureApiCallObserver())\n")
+                        .append("             .subscribeWith(object : MyDisposableObserver<")
+                        .append(javaClass).append(">(onSuccess) {})\n\n\n");*/
             }
 
             String fileName = webapi.value();
@@ -189,7 +235,7 @@ public final class AvidAProcessor extends AbstractProcessor {
                 "            .connectTimeout(conf.getConnectTimeout(), TimeUnit.SECONDS)\n" +
                 "            .writeTimeout(conf.getWriteTimeout(), TimeUnit.SECONDS)\n" +
                 "\n" +
-                "        if (needToken) {\n"+
+                "        if (needToken) {\n" +
                 "            val token = conf.getToken()\n" +
                 "            if (token != null) {\n" +
                 "                okHttpClientBuilder.addInterceptor { chain ->\n" +
@@ -256,6 +302,7 @@ public final class AvidAProcessor extends AbstractProcessor {
                 "import com.google.gson.FieldNamingPolicy\n" +
                 "import com.google.gson.GsonBuilder\n" +
                 "import com.google.gson.JsonSyntaxException\n" +
+                "import com.google.gson.Gson\n" +
                 "import io.reactivex.Observable\n" +
                 "import io.reactivex.ObservableSource\n" +
                 "import io.reactivex.ObservableTransformer\n" +
@@ -297,6 +344,114 @@ public final class AvidAProcessor extends AbstractProcessor {
 
         return fileContent;
 
+    }
+
+    String getMCashClass(String pack) {
+        String fileContent =
+                "package " + pack + "\n" +
+                        "\n" +
+                        "import androidx.room.Entity\n" +
+                        "import androidx.room.PrimaryKey\n" +
+                        "\n" +
+                        "/**\n" +
+                        " * Table for store tableName\n" +
+                        " *\n" +
+                        " * @property id primary key of local table\n" +
+                        " */\n" +
+                        "@Entity(tableName = \"m_cash\")\n" +
+                        "data class MCash(\n" +
+                        "    @PrimaryKey(autoGenerate = true) var id: Int? = null,\n" +
+                        "    var token: String,\n" +
+                        "    var data_val: String?\n" +
+                        "\n" +
+                        ")";
+
+
+
+        return fileContent;
+
+    }
+    String getMCashDaoClass(String pack) {
+        String fileContent =
+                "package " + pack + "\n" +
+                        "import androidx.room.Dao\n" +
+                        "import androidx.room.Insert\n" +
+                        "import androidx.room.OnConflictStrategy\n" +
+                        "import androidx.room.Query\n" +
+                        "\n" +
+                        "@Dao\n" +
+                        "interface MCashDao {\n" +
+                        "\n" +
+                        "    @Insert(onConflict = OnConflictStrategy.REPLACE)\n" +
+                        "    fun insert(users: MCash)\n" +
+                        "\n" +
+                        "    @Query(\"delete from m_cash\")\n" +
+                        "    fun deleteAll(): Int\n" +
+                        "\n" +
+                        "    @Query(\"select * from m_cash limit 1\")\n" +
+                        "    fun getOneById(): MCash?\n" +
+                        "\n" +
+                        "    @Query(\"select * from m_cash where m_cash.token= :mToken limit 1\")\n" +
+                        "    fun getObjByToken(mToken: String): MCash?\n" +
+                        "\n" +
+                        "    @Query(\"UPDATE m_cash SET  data_val = :vae where m_cash.token= :mToken \")\n" +
+                        "    fun updateObj(mToken: String, vae: String): Int\n" +
+                        "}";
+
+
+        return fileContent;
+
+    }
+
+    String getDatabaseClass(String pack) {
+        String fileContent = "\n" +
+                "package " + pack + "\n" +
+                "\n" +
+                "import android.content.Context\n" +
+                "import androidx.room.Database\n" +
+                "import androidx.room.Room\n" +
+                "import androidx.room.RoomDatabase\n" +
+                "\n" +
+                "\n" +
+                "@Database(entities = [MCash::class], version = 1)\n" +
+                "abstract class AvidaAppDatabases : RoomDatabase() {\n" +
+                "\n" +
+                "    companion object {\n" +
+                "        private const val dataBaseName: String = \"api_casher.db\"\n" +
+                "        var dbInstance: AvidaAppDatabases? = null\n" +
+                "        @JvmStatic\n" +
+                "        fun getInstance(): AvidaAppDatabases? {\n" +
+                "            return dbInstance\n" +
+                "        }\n" +
+                "        @JvmStatic\n" +
+                "        fun newInstance(context: Context): AvidaAppDatabases? {\n" +
+                "            if (dbInstance == null) {\n" +
+                "                synchronized(MCash::class.java) {\n" +
+                "                    dbInstance =\n" +
+                "                        Room.databaseBuilder(context, AvidaAppDatabases::class.java, dataBaseName)\n" +
+                "                            .allowMainThreadQueries()\n" +
+                "                            .fallbackToDestructiveMigration()\n" +
+                "                            .build()\n" +
+                "                }\n" +
+                "            }\n" +
+                "            return dbInstance\n" +
+                "        }\n" +
+                "\n" +
+                "\n" +
+                "    }\n" +
+                "\n" +
+                "\n" +
+                "    public abstract fun mCashDao(): MCashDao\n" +
+                "\n" +
+                "\n" +
+                "    fun destroyInstance() {\n" +
+                "        dbInstance = null\n" +
+                "    }\n" +
+                "\n" +
+                "\n" +
+                "}";
+
+        return fileContent;
     }
 
     String getDOClass(String pack) {

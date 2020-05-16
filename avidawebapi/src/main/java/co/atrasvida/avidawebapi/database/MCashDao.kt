@@ -21,5 +21,5 @@ interface MCashDao {
     fun getObjByToken(mToken: String): MCash?
 
     @Query("UPDATE m_cash SET  data_val = :vae where m_cash.token= :mToken ")
-    fun updatePresentToday(mToken: String, vae: String): Int
+    fun updateObj(mToken: String, vae: String): Int
 }

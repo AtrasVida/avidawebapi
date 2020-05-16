@@ -1,11 +1,11 @@
-package co.atrasvida.example.ApiClient;
+package co.atrasvida.example.apiClient;
 
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 
 
-class BaseResponse<T> {
+public class BaseResponse<T> {
 
     @SerializedName("IsSuccess")
     boolean isSuccess = false;

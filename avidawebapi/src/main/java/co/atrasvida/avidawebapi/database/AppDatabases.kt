@@ -34,7 +34,7 @@ abstract class AvidaAppDatabases : RoomDatabase() {
     }
 
 
-    public abstract fun userDao(): MCashDao
+    public abstract fun mCashDao(): MCashDao
 
 
     fun destroyInstance() {
