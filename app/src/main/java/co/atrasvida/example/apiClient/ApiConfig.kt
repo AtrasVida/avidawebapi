@@ -8,12 +8,12 @@ class ApiConfig : WebApiConfig() {
         return URL.BASE_URL
     }
 
-    override fun getBaseModel(): Type {
+    override fun getBaseModel(): Class<*> {
         return BaseResponse::class.java
     }
 
-    override fun getToken(): String {
-        return "Bearer \$token"
+    override fun getToken(): String? {
+        return null //"Bearer \$token"
     }
 
     override fun getReadTimeout(): Long {

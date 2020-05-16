@@ -118,8 +118,9 @@ public final class AvidAProcessor extends AbstractProcessor {
 
                 TypeMirror returnType = (executableElement.getReturnType());
                 String javaClass = returnType.toString().substring(
-                        "io.reactivex.Observable<" .length(), returnType.toString().length() - 1
+                        "io.reactivex.Observable<".length(), returnType.toString().length() - 1
                 );
+
 
                 javaClass = javaClass.replace("java.lang.Object", "Any");
 
@@ -127,39 +128,64 @@ public final class AvidAProcessor extends AbstractProcessor {
                         .append("( ").append(parametrString)
                         .append(" onSuccess: (").append(javaClass).append(") -> Unit) ")
                         .append(": MyDisposableObserver<").append(javaClass).append(">{\n")
-                        .append("        var mToken= \"" + executableElement.getSimpleName() + "\"\n\n")
-                        .append("        var objByToken = AvidaAppDatabases.getInstance()!!" +
-                                ".mCashDao().getObjByToken(mToken)\n" +
-                                "\n" +
-                                "        var haveObj = false\n" +
-                                "        if (objByToken != null) {\n" +
-                                "            haveObj = true\n" +
-                                "            val e  = Gson().fromJson(\n" +
-                                "                objByToken.data_val,\n" +
-                                "               " + configClassName + " ().getBaseModel().javaClass\n" +
-                                "            )\n" +
-                                "            onSuccess(e as  " + javaClass + ")\n" +
-                                "        }\n\n")
 
                         .append("        var sb = object : MyDisposableObserver<" + javaClass + ">(onSuccess) {\n" +
                                 "            override fun onNext(t: " + javaClass + ") {\n" +
                                 "                super.onNext(t)\n" +
+                                " \n" +
+                                "                if (isCacheableInitialized()) {\n" +
+                                "                    var mToken= \"" + executableElement.getSimpleName() + "\"+ mCacheableToken\n\n " +
+                                "                    var objByToken =\n" +
+                                "                        AvidaAppDatabases.getInstance()!!.mCashDao().getObjByToken(mToken)\n" +
                                 "\n" +
-                                "                var jsonStr = Gson().toJson(t)\n" +
+                                "                    var jsonStr = Gson().toJson(t)\n" +
                                 "\n" +
-                                "                if (haveObj) {\n" +
-                                "                    AvidaAppDatabases.getInstance()!!.mCashDao()\n" +
-                                "                        .updateObj(mToken , jsonStr)\n" +
-                                "                } else {\n" +
-                                "                    AvidaAppDatabases.getInstance()!!.mCashDao()\n" +
-                                "                        .insert(MCash(0, mToken , jsonStr))\n" +
-                                "                }\n" +
+                                "                    if (objByToken != null) {\n" +
+                                "                        AvidaAppDatabases.getInstance()!!.mCashDao()\n" +
+                                "                            .updateObj(mToken, jsonStr)\n" +
+                                "                    } else {\n" +
+                                "                        AvidaAppDatabases.getInstance()!!.mCashDao()\n" +
+                                "                            .insert(MCash(0, mToken, jsonStr))\n" +
+                                "                    }\n" +
+                                "                }" +
                                 "            }\n" +
+                                "\n" +
+                                "            override fun onStart() {\n" +
+                                "                super.onStart()\n" +
+                                "                if (isCacheableInitialized()) {\n" +
+                                "                    var mToken= \"" + executableElement.getSimpleName() + "\"+ mCacheableToken\n\n " +
+                                "                    var objByToken =\n" +
+                                "                        AvidaAppDatabases.getInstance()!!.mCashDao().getObjByToken(mToken)\n" +
+                                "\n" +
+                                "                    if (objByToken != null) {\n" +
+                                "                        val e = Gson().fromJson(\n" +
+                                "                            objByToken?.data_val,\n" +
+                                "                            co.atrasvida.example.apiClient.ApiConfig().getBaseModel()\n" +
+                                "                        )\n" +
+                                "                         mCacheable(e as  " + javaClass + ")\n" +
+                                "                    }\n" +
+                                "                }\n" +
+                                "            }\n\n" +
+
+
+                                //  "            override fun onStart() {\n" +
+                                //  "                super.onStart()\n" +
+                                //  "                if (isCacheableInitialized())\n"+
+                                //  "                     if (haveObj) {\n" +
+                                //  "                         val e = Gson().fromJson(\n" +
+                                //  "                             objByToken?.data_val,\n" +
+                                //  "                             " + configClassName + " ().getBaseModel()\n" +
+                                //  "                         )\n" +
+                                //  "                         mCacheable(e as  " + javaClass + ")\n" +
+                                //  "                     }\n" +
+                                //  "            }\n" +
                                 "        }\n\n")
-                        .append("        return networkApiService!!." + executableElement.getSimpleName() + "() \n" +
+                        .append("        android.os.Handler().post {\n" +
+                                "             networkApiService!!." + executableElement.getSimpleName() + "() \n" +
                                 "            .compose(configureApiCallObserver())\n" +
-                                "            .subscribeWith(sb)\n" +
-                                "        }");
+                                "            .subscribeWith(sb)\n        }\n\n")
+                        .append("        return sb" + " \n" +
+                                " }");
 
                       /*  .append("networkApiService!!\n")
                         .append("             .").append(executableElement.getSimpleName())
@@ -367,10 +393,10 @@ public final class AvidAProcessor extends AbstractProcessor {
                         ")";
 
 
-
         return fileContent;
 
     }
+
     String getMCashDaoClass(String pack) {
         String fileContent =
                 "package " + pack + "\n" +
@@ -473,6 +499,18 @@ public final class AvidAProcessor extends AbstractProcessor {
                 "    }\n" +
                 "\n" +
                 "\n" +
+                "\n" +
+                "    internal lateinit var mCacheable: (T) -> Unit\n" +
+                "    internal lateinit  var mCacheableToken: String\n" +
+                "    fun fromCash(cacheableToken: String, cacheable: (T) -> Unit): MyDisposableObserver<T> {\n" +
+                "        mCacheable = cacheable\n" +
+                "        mCacheableToken = cacheableToken\n" +
+                "        return this\n" +
+                "    }\n" +
+                "\n" +
+                "    fun isCacheableInitialized(): Boolean {\n" +
+                "        return ::mCacheable.isInitialized\n" +
+                "    }\n\n" +
                 "    override fun onError(throwable: Throwable) {\n" +
                 "        if (::mThrowable.isInitialized)\n" +
                 "            mThrowable(throwable)\n" +

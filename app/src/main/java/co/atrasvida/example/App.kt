@@ -1,7 +1,7 @@
 package co.atrasvida.example
 
 import android.app.Application
-import co.atrasvida.avidawebapi.database.AvidaAppDatabases
+import co.atrasvida.example.apiClient.AvidaAppDatabases
 
 class App : Application() {
 
