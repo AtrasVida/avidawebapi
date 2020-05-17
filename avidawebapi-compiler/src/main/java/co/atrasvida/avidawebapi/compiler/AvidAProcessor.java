@@ -169,7 +169,7 @@ public final class AvidAProcessor extends AbstractProcessor {
 
                                 "        }\n\n")
                         .append("        android.os.Handler().post {\n" +
-                                "             networkApiService!!." + executableElement.getSimpleName() + "() \n" +
+                                "             networkApiService!!." + executableElement.getSimpleName() + "(" + parametrStringVal + ") \n" +
                                 "            .compose(configureApiCallObserver())\n" +
                                 "            .subscribeWith(sb)\n        }\n\n")
                         .append("        return sb" + " \n" +
@@ -268,7 +268,6 @@ public final class AvidAProcessor extends AbstractProcessor {
                 "            .create(" + className + "::class.java)\n" +
                 "    }\n" +
                 "\n" +
-                "    }\n" +
                 "\n" +
                 "    internal class RetryWithDelay :\n" +
                 "        Function<Observable<out Throwable?>, ObservableSource<*>> {\n" +
