@@ -167,18 +167,6 @@ public final class AvidAProcessor extends AbstractProcessor {
                                 "                }\n" +
                                 "            }\n\n" +
 
-
-                                //  "            override fun onStart() {\n" +
-                                //  "                super.onStart()\n" +
-                                //  "                if (isCacheableInitialized())\n"+
-                                //  "                     if (haveObj) {\n" +
-                                //  "                         val e = Gson().fromJson(\n" +
-                                //  "                             objByToken?.data_val,\n" +
-                                //  "                             " + configClassName + " ().getBaseModel()\n" +
-                                //  "                         )\n" +
-                                //  "                         mCacheable(e as  " + javaClass + ")\n" +
-                                //  "                     }\n" +
-                                //  "            }\n" +
                                 "        }\n\n")
                         .append("        android.os.Handler().post {\n" +
                                 "             networkApiService!!." + executableElement.getSimpleName() + "() \n" +
@@ -186,13 +174,6 @@ public final class AvidAProcessor extends AbstractProcessor {
                                 "            .subscribeWith(sb)\n        }\n\n")
                         .append("        return sb" + " \n" +
                                 " }");
-
-                      /*  .append("networkApiService!!\n")
-                        .append("             .").append(executableElement.getSimpleName())
-                        .append("(").append(parametrStringVal).append(")\n")
-                        .append("             .compose(configureApiCallObserver())\n")
-                        .append("             .subscribeWith(object : MyDisposableObserver<")
-                        .append(javaClass).append(">(onSuccess) {})\n\n\n");*/
             }
 
             String fileName = webapi.value();
@@ -286,15 +267,6 @@ public final class AvidAProcessor extends AbstractProcessor {
                 "            .build()\n" +
                 "            .create(" + className + "::class.java)\n" +
                 "    }\n" +
-                "\n" +
-                "    private fun getToken(): String? {\n" +
-                "        //   if (AppDataManager.usersInfo != null)\n" +
-                "        //       return AppDataManager.usersInfo?.token\n" +
-                "        //   else\n" +
-                "        //       if (AppDatabases.getInstance() != null)\n" +
-                "        //           if (AppDatabases.getInstance()!!.userDao().getOneById() != null)\n" +
-                "        //               return AppDatabases.getInstance()!!.userDao().getOneById()!!.token\n" +
-                "        return null\n" +
                 "\n" +
                 "    }\n" +
                 "\n" +
