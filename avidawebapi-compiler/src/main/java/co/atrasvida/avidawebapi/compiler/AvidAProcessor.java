@@ -160,7 +160,7 @@ public final class AvidAProcessor extends AbstractProcessor {
                                 "                    if (objByToken != null) {\n" +
                                 "                        val e = Gson().fromJson(\n" +
                                 "                            objByToken?.data_val,\n" +
-                                "                            co.atrasvida.example.apiClient.ApiConfig().getBaseModel()\n" +
+                                "                            " + configClassName + " ().getBaseModel()\n" +
                                 "                        )\n" +
                                 "                         mCacheable(e as  " + javaClass + ")\n" +
                                 "                    }\n" +
