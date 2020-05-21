@@ -22,10 +22,4 @@ public class BaseResponse<T> {
     @SerializedName("Message")
     String message = null;
 
-    /**
-     * this is only for /api/token/ request
-     */
-    @SerializedName("access")
-    String access = null;
-
 }
