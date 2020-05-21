@@ -114,7 +114,7 @@ internal interface NetworkApiService {
 ```
 
 now you can use every where :
-```
+```kotlin
 ApiService().getCarBrands() {
     print(it.toString())
 }
@@ -133,7 +133,7 @@ ApiService().getCarBrands() {
 
 handle error :
 
-```
+```kotlin
 ApiService().getCarBrands() {
      print(it.toString())
 
@@ -147,7 +147,7 @@ ApiService().getCarBrands() {
 
 using Disposable:
 
-```
+```kotlin
 var myDisposable = CompositeDisposable()
 
 ApiService().getCarBrands() {
