@@ -61,6 +61,7 @@ dependencies {
     implementation 'com.jakewharton.rxrelay2:rxrelay:2.1.0'
     implementation 'io.reactivex:rxkotlin:0.21.0'
 
+    //room
     implementation 'androidx.room:room-runtime:2.2.3'
     kapt 'androidx.room:room-compiler:2.2.3'
 }
