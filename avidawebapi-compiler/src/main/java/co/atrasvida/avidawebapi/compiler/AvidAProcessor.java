@@ -158,9 +158,10 @@ public final class AvidAProcessor extends AbstractProcessor {
                                 "                        AvidaAppDatabases.getInstance()!!.mCashDao().getObjByToken(mToken)\n" +
                                 "\n" +
                                 "                    if (objByToken != null) {\n" +
-                                "                        val e = Gson().fromJson(\n" +
+                                "                        val e : " + javaClass + " = Gson().fromJson(\n" +
                                 "                            objByToken?.data_val,\n" +
-                                "                            " + configClassName + " ().getBaseModel()\n" +
+                                "                              object : com.google.gson.reflect.TypeToken<" + javaClass +">(){}.type \n"+
+                               // "                            " + configClassName + " ().getBaseModel()\n" +
                                 "                        )\n" +
                                 "                         mCacheable(e as  " + javaClass + ")\n" +
                                 "                    }\n" +
