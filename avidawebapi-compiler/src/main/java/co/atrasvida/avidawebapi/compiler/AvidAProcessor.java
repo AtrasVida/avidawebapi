@@ -145,7 +145,7 @@ public final class AvidAProcessor extends AbstractProcessor {
                                 "                            .updateObj(mToken, jsonStr)\n" +
                                 "                    } else {\n" +
                                 "                        AvidaAppDatabases.getInstance()!!.mCashDao()\n" +
-                                "                            .insert(MCash(0, mToken, jsonStr))\n" +
+                                "                            .insert(MCash(null, mToken, jsonStr))\n" +
                                 "                    }\n" +
                                 "                }" +
                                 "            }\n" +
@@ -385,6 +385,12 @@ public final class AvidAProcessor extends AbstractProcessor {
                         "\n" +
                         "    @Query(\"delete from m_cash\")\n" +
                         "    fun deleteAll(): Int\n" +
+                        "\n" +
+                        "    @Query(\"select * from m_cash where id=:id limit 1\")\n" +
+                        "    fun getOneById(id: Int): MCash?\n" +
+                        "\n" +
+                        "    @Query(\"select * from m_cash \")\n" +
+                        "    fun getAll(): MCash?\n" +
                         "\n" +
                         "    @Query(\"select * from m_cash limit 1\")\n" +
                         "    fun getOneById(): MCash?\n" +
