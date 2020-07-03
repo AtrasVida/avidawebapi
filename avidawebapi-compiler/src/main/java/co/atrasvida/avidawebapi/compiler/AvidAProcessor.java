@@ -29,6 +29,8 @@ import javax.tools.FileObject;
 import javax.tools.StandardLocation;
 
 import co.atrasvida.avidawebapi_annotations.BindView;
+import co.atrasvida.avidawebapi_annotations.CACHING;
+import co.atrasvida.avidawebapi_annotations.CachSetting;
 import co.atrasvida.avidawebapi_annotations.Keep;
 import co.atrasvida.avidawebapi_annotations.OnClick;
 import co.atrasvida.avidawebapi_annotations.WebApi;
@@ -121,6 +123,24 @@ public final class AvidAProcessor extends AbstractProcessor {
                         "io.reactivex.Observable<".length(), returnType.toString().length() - 1
                 );
 
+                CachSetting annotationsOfMetud = CachSetting.first_From_Cash_Then_Api;
+                CACHING annotation = executableElement.getAnnotation(CACHING.class);
+
+                if (annotation != null)
+                    annotationsOfMetud = annotation.value();
+
+                String cashPolocy = "";
+                String onSuccess = "";
+                if (annotationsOfMetud == CachSetting.first_From_Cash_Then_Api) {
+                    cashPolocy = "  super.onNext(t)\n";
+                } else if (annotationsOfMetud == CachSetting.first_cash_and_if_updated) {
+                    cashPolocy = " " +
+                            "                    if (objByToken == null) {\n" +
+                            "                        super.onNext(t)\n" +
+                            "                    } else if (objByToken!!.data_val != Gson().toJson(t)) {\n" +
+                            "                        super.onNext(t)\n" +
+                            "                    }";
+                }
 
                 javaClass = javaClass.replace("java.lang.Object", "Any");
 
@@ -130,8 +150,10 @@ public final class AvidAProcessor extends AbstractProcessor {
                         .append(": MyDisposableObserver<").append(javaClass).append(">{\n")
 
                         .append("        var sb = object : MyDisposableObserver<" + javaClass + ">(onSuccess) {\n" +
+
+                                "            var objByToken : MCash? = null \n \n " +
                                 "            override fun onNext(t: " + javaClass + ") {\n" +
-                                "                super.onNext(t)\n" +
+                                "                " + cashPolocy + " \n" +
                                 " \n" +
                                 "                if (isCacheableInitialized()) {\n" +
                                 "                    var mToken= \"" + executableElement.getSimpleName() + "\"+ mCacheableToken\n\n " +
@@ -154,14 +176,14 @@ public final class AvidAProcessor extends AbstractProcessor {
                                 "                super.onStart()\n" +
                                 "                if (isCacheableInitialized()) {\n" +
                                 "                    var mToken= \"" + executableElement.getSimpleName() + "\"+ mCacheableToken\n\n " +
-                                "                    var objByToken =\n" +
+                                "                     objByToken =\n" +
                                 "                        AvidaAppDatabases.getInstance()!!.mCashDao().getObjByToken(mToken)\n" +
                                 "\n" +
                                 "                    if (objByToken != null) {\n" +
                                 "                        val e : " + javaClass + " = Gson().fromJson(\n" +
                                 "                            objByToken?.data_val,\n" +
-                                "                              object : com.google.gson.reflect.TypeToken<" + javaClass +">(){}.type \n"+
-                               // "                            " + configClassName + " ().getBaseModel()\n" +
+                                "                              object : com.google.gson.reflect.TypeToken<" + javaClass + ">(){}.type \n" +
+                                // "                            " + configClassName + " ().getBaseModel()\n" +
                                 "                        )\n" +
                                 "                         mCacheable(e as  " + javaClass + ")\n" +
                                 "                    }\n" +
