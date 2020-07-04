@@ -413,7 +413,7 @@ public final class AvidAProcessor extends AbstractProcessor {
                         "    fun getOneById(id: Int): MCash?\n" +
                         "\n" +
                         "    @Query(\"select * from m_cash \")\n" +
-                        "    fun getAllObjects(): List<MCash>?\n" +
+                        "    fun getAllObjects(): Array<MCash>?\n" +
                         "\n" +
                         "    @Query(\"select * from m_cash limit 1\")\n" +
                         "    fun getOneById(): MCash?\n" +
