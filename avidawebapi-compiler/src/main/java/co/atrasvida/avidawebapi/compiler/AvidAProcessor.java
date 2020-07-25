@@ -76,6 +76,7 @@ public final class AvidAProcessor extends AbstractProcessor {
                 FileWr(pack, "MyDisposableObserver", getDOClass(pack), roundEnvironment, it);
                 FileWr(pack, "Deserializer", getDeserializer(pack), roundEnvironment, it);
                 FileWr(pack, "AvidaAppDatabases", getDatabaseClass(pack), roundEnvironment, it);
+                FileWr(pack, "AvidaAppDatabases_Impl", getDatabaseClass(pack), roundEnvironment, it);
                 FileWr(pack, "MCashDao", getMCashDaoClass(pack), roundEnvironment, it);
                 FileWr(pack, "MCash", getMCashClass(pack), roundEnvironment, it);
 
@@ -211,8 +212,9 @@ public final class AvidAProcessor extends AbstractProcessor {
 
     private String toKatlin(TypeMirror asType) {
         String type = asType.toString();
-
         if (type.equals("int")) return "Int";
+        if (type.equals("boolean")) return "Boolean";
+        if (type.equals("long")) return "Long";
         else if (type.equals("java.lang.String")) return "kotlin.String";
         else return type;
 
@@ -547,6 +549,154 @@ public final class AvidAProcessor extends AbstractProcessor {
                 "    companion object {\n" +
                 "        private const val TAG = \"MyDisposableObserver\"\n" +
                 "    }" +
+                "}\n";
+
+        String fileName = "MyDisposableObserver";
+
+        return fileContent;
+    }
+
+    String getDatabaseImplClass(String pack) {
+        String fileContent = "\n" +
+                "package " + pack + "\n" +
+                "\n" +
+                "import androidx.room.DatabaseConfiguration;\n" +
+                "import androidx.room.InvalidationTracker;\n" +
+                "import androidx.room.RoomOpenHelper;\n" +
+                "import androidx.room.RoomOpenHelper.Delegate;\n" +
+                "import androidx.room.RoomOpenHelper.ValidationResult;\n" +
+                "import androidx.room.util.DBUtil;\n" +
+                "import androidx.room.util.TableInfo;\n" +
+                "import androidx.room.util.TableInfo.Column;\n" +
+                "import androidx.room.util.TableInfo.ForeignKey;\n" +
+                "import androidx.room.util.TableInfo.Index;\n" +
+                "import androidx.sqlite.db.SupportSQLiteDatabase;\n" +
+                "import androidx.sqlite.db.SupportSQLiteOpenHelper;\n" +
+                "import androidx.sqlite.db.SupportSQLiteOpenHelper.Callback;\n" +
+                "import androidx.sqlite.db.SupportSQLiteOpenHelper.Configuration;\n" +
+                "import java.lang.Override;\n" +
+                "import java.lang.String;\n" +
+                "import java.lang.SuppressWarnings;\n" +
+                "import java.util.HashMap;\n" +
+                "import java.util.HashSet;\n" +
+                "import java.util.Set;\n" +
+                "\n" +
+                "@SuppressWarnings({\"unchecked\", \"deprecation\"})\n" +
+                "public final class AvidaAppDatabases_Impl extends AvidaAppDatabases {\n" +
+                "  private volatile MCashDao _mCashDao;\n" +
+                "\n" +
+                "  @Override\n" +
+                "  protected SupportSQLiteOpenHelper createOpenHelper(DatabaseConfiguration configuration) {\n" +
+                "    final SupportSQLiteOpenHelper.Callback _openCallback = new RoomOpenHelper(configuration, new RoomOpenHelper.Delegate(1) {\n" +
+                "      @Override\n" +
+                "      public void createAllTables(SupportSQLiteDatabase _db) {\n" +
+                "        _db.execSQL(\"CREATE TABLE IF NOT EXISTS `m_cash` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `token` TEXT NOT NULL, `data_val` TEXT)\");\n" +
+                "        _db.execSQL(\"CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)\");\n" +
+                "        _db.execSQL(\"INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c2a4f1a97940f1152c48b1fc7832c189')\");\n" +
+                "      }\n" +
+                "\n" +
+                "      @Override\n" +
+                "      public void dropAllTables(SupportSQLiteDatabase _db) {\n" +
+                "        _db.execSQL(\"DROP TABLE IF EXISTS `m_cash`\");\n" +
+                "        if (mCallbacks != null) {\n" +
+                "          for (int _i = 0, _size = mCallbacks.size(); _i < _size; _i++) {\n" +
+                "            mCallbacks.get(_i).onDestructiveMigration(_db);\n" +
+                "          }\n" +
+                "        }\n" +
+                "      }\n" +
+                "\n" +
+                "      @Override\n" +
+                "      protected void onCreate(SupportSQLiteDatabase _db) {\n" +
+                "        if (mCallbacks != null) {\n" +
+                "          for (int _i = 0, _size = mCallbacks.size(); _i < _size; _i++) {\n" +
+                "            mCallbacks.get(_i).onCreate(_db);\n" +
+                "          }\n" +
+                "        }\n" +
+                "      }\n" +
+                "\n" +
+                "      @Override\n" +
+                "      public void onOpen(SupportSQLiteDatabase _db) {\n" +
+                "        mDatabase = _db;\n" +
+                "        internalInitInvalidationTracker(_db);\n" +
+                "        if (mCallbacks != null) {\n" +
+                "          for (int _i = 0, _size = mCallbacks.size(); _i < _size; _i++) {\n" +
+                "            mCallbacks.get(_i).onOpen(_db);\n" +
+                "          }\n" +
+                "        }\n" +
+                "      }\n" +
+                "\n" +
+                "      @Override\n" +
+                "      public void onPreMigrate(SupportSQLiteDatabase _db) {\n" +
+                "        DBUtil.dropFtsSyncTriggers(_db);\n" +
+                "      }\n" +
+                "\n" +
+                "      @Override\n" +
+                "      public void onPostMigrate(SupportSQLiteDatabase _db) {\n" +
+                "      }\n" +
+                "\n" +
+                "      @Override\n" +
+                "      protected RoomOpenHelper.ValidationResult onValidateSchema(SupportSQLiteDatabase _db) {\n" +
+                "        final HashMap<String, TableInfo.Column> _columnsMCash = new HashMap<String, TableInfo.Column>(3);\n" +
+                "        _columnsMCash.put(\"id\", new TableInfo.Column(\"id\", \"INTEGER\", false, 1, null, TableInfo.CREATED_FROM_ENTITY));\n" +
+                "        _columnsMCash.put(\"token\", new TableInfo.Column(\"token\", \"TEXT\", true, 0, null, TableInfo.CREATED_FROM_ENTITY));\n" +
+                "        _columnsMCash.put(\"data_val\", new TableInfo.Column(\"data_val\", \"TEXT\", false, 0, null, TableInfo.CREATED_FROM_ENTITY));\n" +
+                "        final HashSet<TableInfo.ForeignKey> _foreignKeysMCash = new HashSet<TableInfo.ForeignKey>(0);\n" +
+                "        final HashSet<TableInfo.Index> _indicesMCash = new HashSet<TableInfo.Index>(0);\n" +
+                "        final TableInfo _infoMCash = new TableInfo(\"m_cash\", _columnsMCash, _foreignKeysMCash, _indicesMCash);\n" +
+                "        final TableInfo _existingMCash = TableInfo.read(_db, \"m_cash\");\n" +
+                "        if (! _infoMCash.equals(_existingMCash)) {\n" +
+                "          return new RoomOpenHelper.ValidationResult(false, \"m_cash(com.pintoads.moshaver24.webservice.MCash).\\n\"\n" +
+                "                  + \" Expected:\\n\" + _infoMCash + \"\\n\"\n" +
+                "                  + \" Found:\\n\" + _existingMCash);\n" +
+                "        }\n" +
+                "        return new RoomOpenHelper.ValidationResult(true, null);\n" +
+                "      }\n" +
+                "    }, \"c2a4f1a97940f1152c48b1fc7832c189\", \"2a7b0ea83266efb5d03652908ef830c9\");\n" +
+                "    final SupportSQLiteOpenHelper.Configuration _sqliteConfig = SupportSQLiteOpenHelper.Configuration.builder(configuration.context)\n" +
+                "        .name(configuration.name)\n" +
+                "        .callback(_openCallback)\n" +
+                "        .build();\n" +
+                "    final SupportSQLiteOpenHelper _helper = configuration.sqliteOpenHelperFactory.create(_sqliteConfig);\n" +
+                "    return _helper;\n" +
+                "  }\n" +
+                "\n" +
+                "  @Override\n" +
+                "  protected InvalidationTracker createInvalidationTracker() {\n" +
+                "    final HashMap<String, String> _shadowTablesMap = new HashMap<String, String>(0);\n" +
+                "    HashMap<String, Set<String>> _viewTables = new HashMap<String, Set<String>>(0);\n" +
+                "    return new InvalidationTracker(this, _shadowTablesMap, _viewTables, \"m_cash\");\n" +
+                "  }\n" +
+                "\n" +
+                "  @Override\n" +
+                "  public void clearAllTables() {\n" +
+                "    super.assertNotMainThread();\n" +
+                "    final SupportSQLiteDatabase _db = super.getOpenHelper().getWritableDatabase();\n" +
+                "    try {\n" +
+                "      super.beginTransaction();\n" +
+                "      _db.execSQL(\"DELETE FROM `m_cash`\");\n" +
+                "      super.setTransactionSuccessful();\n" +
+                "    } finally {\n" +
+                "      super.endTransaction();\n" +
+                "      _db.query(\"PRAGMA wal_checkpoint(FULL)\").close();\n" +
+                "      if (!_db.inTransaction()) {\n" +
+                "        _db.execSQL(\"VACUUM\");\n" +
+                "      }\n" +
+                "    }\n" +
+                "  }\n" +
+                "\n" +
+                "  @Override\n" +
+                "  public MCashDao mCashDao() {\n" +
+                "    if (_mCashDao != null) {\n" +
+                "      return _mCashDao;\n" +
+                "    } else {\n" +
+                "      synchronized(this) {\n" +
+                "        if(_mCashDao == null) {\n" +
+                "          _mCashDao = new MCashDao_Impl(this);\n" +
+                "        }\n" +
+                "        return _mCashDao;\n" +
+                "      }\n" +
+                "    }\n" +
+                "  }\n" +
                 "}\n";
 
         String fileName = "MyDisposableObserver";
