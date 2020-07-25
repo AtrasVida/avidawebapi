@@ -78,6 +78,7 @@ public final class AvidAProcessor extends AbstractProcessor {
                 FileWr(pack, "Deserializer", getDeserializer(pack), roundEnvironment, it);
                 FileWr(pack, "AvidaAppDatabases", getDatabaseClass(pack), roundEnvironment, it);
                 FileWrJava(pack, "AvidaAppDatabases_Impl", getDatabaseImplClass(pack), roundEnvironment, it);
+                FileWrJava(pack, "MCashDao_Impl", getDatabaseImplClass(pack), roundEnvironment, it);
                 FileWr(pack, "MCashDao", getMCashDaoClass(pack), roundEnvironment, it);
                 FileWr(pack, "MCash", getMCashClass(pack), roundEnvironment, it);
 
@@ -696,6 +697,279 @@ public final class AvidAProcessor extends AbstractProcessor {
                 "        }\n" +
                 "        return _mCashDao;\n" +
                 "      }\n" +
+                "    }\n" +
+                "  }\n" +
+                "}\n";
+
+        String fileName = "MyDisposableObserver";
+
+        return fileContent;
+    }
+
+    String getCashImplClass(String pack) {
+        String fileContent = "\n" +
+                "package " + pack + ";\n" +
+                "\n" +
+                "\n" +
+                "import android.database.Cursor;\n" +
+                "import androidx.room.EntityInsertionAdapter;\n" +
+                "import androidx.room.RoomDatabase;\n" +
+                "import androidx.room.RoomSQLiteQuery;\n" +
+                "import androidx.room.SharedSQLiteStatement;\n" +
+                "import androidx.room.util.CursorUtil;\n" +
+                "import androidx.room.util.DBUtil;\n" +
+                "import androidx.sqlite.db.SupportSQLiteStatement;\n" +
+                "import java.lang.Integer;\n" +
+                "import java.lang.Override;\n" +
+                "import java.lang.String;\n" +
+                "import java.lang.SuppressWarnings;\n" +
+                "\n" +
+                "@SuppressWarnings({\"unchecked\", \"deprecation\"})\n" +
+                "public final class MCashDao_Impl implements MCashDao {\n" +
+                "  private final RoomDatabase __db;\n" +
+                "\n" +
+                "  private final EntityInsertionAdapter<MCash> __insertionAdapterOfMCash;\n" +
+                "\n" +
+                "  private final SharedSQLiteStatement __preparedStmtOfDeleteAll;\n" +
+                "\n" +
+                "  private final SharedSQLiteStatement __preparedStmtOfUpdateObj;\n" +
+                "\n" +
+                "  public MCashDao_Impl(RoomDatabase __db) {\n" +
+                "    this.__db = __db;\n" +
+                "    this.__insertionAdapterOfMCash = new EntityInsertionAdapter<MCash>(__db) {\n" +
+                "      @Override\n" +
+                "      public String createQuery() {\n" +
+                "        return \"INSERT OR REPLACE INTO `m_cash` (`id`,`token`,`data_val`) VALUES (?,?,?)\";\n" +
+                "      }\n" +
+                "\n" +
+                "      @Override\n" +
+                "      public void bind(SupportSQLiteStatement stmt, MCash value) {\n" +
+                "        if (value.getId() == null) {\n" +
+                "          stmt.bindNull(1);\n" +
+                "        } else {\n" +
+                "          stmt.bindLong(1, value.getId());\n" +
+                "        }\n" +
+                "        if (value.getToken() == null) {\n" +
+                "          stmt.bindNull(2);\n" +
+                "        } else {\n" +
+                "          stmt.bindString(2, value.getToken());\n" +
+                "        }\n" +
+                "        if (value.getData_val() == null) {\n" +
+                "          stmt.bindNull(3);\n" +
+                "        } else {\n" +
+                "          stmt.bindString(3, value.getData_val());\n" +
+                "        }\n" +
+                "      }\n" +
+                "    };\n" +
+                "    this.__preparedStmtOfDeleteAll = new SharedSQLiteStatement(__db) {\n" +
+                "      @Override\n" +
+                "      public String createQuery() {\n" +
+                "        final String _query = \"delete from m_cash\";\n" +
+                "        return _query;\n" +
+                "      }\n" +
+                "    };\n" +
+                "    this.__preparedStmtOfUpdateObj = new SharedSQLiteStatement(__db) {\n" +
+                "      @Override\n" +
+                "      public String createQuery() {\n" +
+                "        final String _query = \"UPDATE m_cash SET  data_val = ? where m_cash.token= ? \";\n" +
+                "        return _query;\n" +
+                "      }\n" +
+                "    };\n" +
+                "  }\n" +
+                "\n" +
+                "  @Override\n" +
+                "  public void insert(final MCash users) {\n" +
+                "    __db.assertNotSuspendingTransaction();\n" +
+                "    __db.beginTransaction();\n" +
+                "    try {\n" +
+                "      __insertionAdapterOfMCash.insert(users);\n" +
+                "      __db.setTransactionSuccessful();\n" +
+                "    } finally {\n" +
+                "      __db.endTransaction();\n" +
+                "    }\n" +
+                "  }\n" +
+                "\n" +
+                "  @Override\n" +
+                "  public int deleteAll() {\n" +
+                "    __db.assertNotSuspendingTransaction();\n" +
+                "    final SupportSQLiteStatement _stmt = __preparedStmtOfDeleteAll.acquire();\n" +
+                "    __db.beginTransaction();\n" +
+                "    try {\n" +
+                "      final int _result = _stmt.executeUpdateDelete();\n" +
+                "      __db.setTransactionSuccessful();\n" +
+                "      return _result;\n" +
+                "    } finally {\n" +
+                "      __db.endTransaction();\n" +
+                "      __preparedStmtOfDeleteAll.release(_stmt);\n" +
+                "    }\n" +
+                "  }\n" +
+                "\n" +
+                "  @Override\n" +
+                "  public int updateObj(final String mToken, final String vae) {\n" +
+                "    __db.assertNotSuspendingTransaction();\n" +
+                "    final SupportSQLiteStatement _stmt = __preparedStmtOfUpdateObj.acquire();\n" +
+                "    int _argIndex = 1;\n" +
+                "    if (vae == null) {\n" +
+                "      _stmt.bindNull(_argIndex);\n" +
+                "    } else {\n" +
+                "      _stmt.bindString(_argIndex, vae);\n" +
+                "    }\n" +
+                "    _argIndex = 2;\n" +
+                "    if (mToken == null) {\n" +
+                "      _stmt.bindNull(_argIndex);\n" +
+                "    } else {\n" +
+                "      _stmt.bindString(_argIndex, mToken);\n" +
+                "    }\n" +
+                "    __db.beginTransaction();\n" +
+                "    try {\n" +
+                "      final int _result = _stmt.executeUpdateDelete();\n" +
+                "      __db.setTransactionSuccessful();\n" +
+                "      return _result;\n" +
+                "    } finally {\n" +
+                "      __db.endTransaction();\n" +
+                "      __preparedStmtOfUpdateObj.release(_stmt);\n" +
+                "    }\n" +
+                "  }\n" +
+                "\n" +
+                "  @Override\n" +
+                "  public MCash getOneById(final int id) {\n" +
+                "    final String _sql = \"select * from m_cash where id=? limit 1\";\n" +
+                "    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 1);\n" +
+                "    int _argIndex = 1;\n" +
+                "    _statement.bindLong(_argIndex, id);\n" +
+                "    __db.assertNotSuspendingTransaction();\n" +
+                "    final Cursor _cursor = DBUtil.query(__db, _statement, false, null);\n" +
+                "    try {\n" +
+                "      final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, \"id\");\n" +
+                "      final int _cursorIndexOfToken = CursorUtil.getColumnIndexOrThrow(_cursor, \"token\");\n" +
+                "      final int _cursorIndexOfDataVal = CursorUtil.getColumnIndexOrThrow(_cursor, \"data_val\");\n" +
+                "      final MCash _result;\n" +
+                "      if(_cursor.moveToFirst()) {\n" +
+                "        final Integer _tmpId;\n" +
+                "        if (_cursor.isNull(_cursorIndexOfId)) {\n" +
+                "          _tmpId = null;\n" +
+                "        } else {\n" +
+                "          _tmpId = _cursor.getInt(_cursorIndexOfId);\n" +
+                "        }\n" +
+                "        final String _tmpToken;\n" +
+                "        _tmpToken = _cursor.getString(_cursorIndexOfToken);\n" +
+                "        final String _tmpData_val;\n" +
+                "        _tmpData_val = _cursor.getString(_cursorIndexOfDataVal);\n" +
+                "        _result = new MCash(_tmpId,_tmpToken,_tmpData_val);\n" +
+                "      } else {\n" +
+                "        _result = null;\n" +
+                "      }\n" +
+                "      return _result;\n" +
+                "    } finally {\n" +
+                "      _cursor.close();\n" +
+                "      _statement.release();\n" +
+                "    }\n" +
+                "  }\n" +
+                "\n" +
+                "  @Override\n" +
+                "  public MCash[] getAllObjects() {\n" +
+                "    final String _sql = \"select * from m_cash \";\n" +
+                "    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);\n" +
+                "    __db.assertNotSuspendingTransaction();\n" +
+                "    final Cursor _cursor = DBUtil.query(__db, _statement, false, null);\n" +
+                "    try {\n" +
+                "      final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, \"id\");\n" +
+                "      final int _cursorIndexOfToken = CursorUtil.getColumnIndexOrThrow(_cursor, \"token\");\n" +
+                "      final int _cursorIndexOfDataVal = CursorUtil.getColumnIndexOrThrow(_cursor, \"data_val\");\n" +
+                "      final MCash[] _result = new MCash[_cursor.getCount()];\n" +
+                "      int _index = 0;\n" +
+                "      while(_cursor.moveToNext()) {\n" +
+                "        final MCash _item;\n" +
+                "        final Integer _tmpId;\n" +
+                "        if (_cursor.isNull(_cursorIndexOfId)) {\n" +
+                "          _tmpId = null;\n" +
+                "        } else {\n" +
+                "          _tmpId = _cursor.getInt(_cursorIndexOfId);\n" +
+                "        }\n" +
+                "        final String _tmpToken;\n" +
+                "        _tmpToken = _cursor.getString(_cursorIndexOfToken);\n" +
+                "        final String _tmpData_val;\n" +
+                "        _tmpData_val = _cursor.getString(_cursorIndexOfDataVal);\n" +
+                "        _item = new MCash(_tmpId,_tmpToken,_tmpData_val);\n" +
+                "        _result[_index] = _item;\n" +
+                "        _index ++;\n" +
+                "      }\n" +
+                "      return _result;\n" +
+                "    } finally {\n" +
+                "      _cursor.close();\n" +
+                "      _statement.release();\n" +
+                "    }\n" +
+                "  }\n" +
+                "\n" +
+                "  @Override\n" +
+                "  public MCash getOneById() {\n" +
+                "    final String _sql = \"select * from m_cash limit 1\";\n" +
+                "    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 0);\n" +
+                "    __db.assertNotSuspendingTransaction();\n" +
+                "    final Cursor _cursor = DBUtil.query(__db, _statement, false, null);\n" +
+                "    try {\n" +
+                "      final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, \"id\");\n" +
+                "      final int _cursorIndexOfToken = CursorUtil.getColumnIndexOrThrow(_cursor, \"token\");\n" +
+                "      final int _cursorIndexOfDataVal = CursorUtil.getColumnIndexOrThrow(_cursor, \"data_val\");\n" +
+                "      final MCash _result;\n" +
+                "      if(_cursor.moveToFirst()) {\n" +
+                "        final Integer _tmpId;\n" +
+                "        if (_cursor.isNull(_cursorIndexOfId)) {\n" +
+                "          _tmpId = null;\n" +
+                "        } else {\n" +
+                "          _tmpId = _cursor.getInt(_cursorIndexOfId);\n" +
+                "        }\n" +
+                "        final String _tmpToken;\n" +
+                "        _tmpToken = _cursor.getString(_cursorIndexOfToken);\n" +
+                "        final String _tmpData_val;\n" +
+                "        _tmpData_val = _cursor.getString(_cursorIndexOfDataVal);\n" +
+                "        _result = new MCash(_tmpId,_tmpToken,_tmpData_val);\n" +
+                "      } else {\n" +
+                "        _result = null;\n" +
+                "      }\n" +
+                "      return _result;\n" +
+                "    } finally {\n" +
+                "      _cursor.close();\n" +
+                "      _statement.release();\n" +
+                "    }\n" +
+                "  }\n" +
+                "\n" +
+                "  @Override\n" +
+                "  public MCash getObjByToken(final String mToken) {\n" +
+                "    final String _sql = \"select * from m_cash where m_cash.token= ? limit 1\";\n" +
+                "    final RoomSQLiteQuery _statement = RoomSQLiteQuery.acquire(_sql, 1);\n" +
+                "    int _argIndex = 1;\n" +
+                "    if (mToken == null) {\n" +
+                "      _statement.bindNull(_argIndex);\n" +
+                "    } else {\n" +
+                "      _statement.bindString(_argIndex, mToken);\n" +
+                "    }\n" +
+                "    __db.assertNotSuspendingTransaction();\n" +
+                "    final Cursor _cursor = DBUtil.query(__db, _statement, false, null);\n" +
+                "    try {\n" +
+                "      final int _cursorIndexOfId = CursorUtil.getColumnIndexOrThrow(_cursor, \"id\");\n" +
+                "      final int _cursorIndexOfToken = CursorUtil.getColumnIndexOrThrow(_cursor, \"token\");\n" +
+                "      final int _cursorIndexOfDataVal = CursorUtil.getColumnIndexOrThrow(_cursor, \"data_val\");\n" +
+                "      final MCash _result;\n" +
+                "      if(_cursor.moveToFirst()) {\n" +
+                "        final Integer _tmpId;\n" +
+                "        if (_cursor.isNull(_cursorIndexOfId)) {\n" +
+                "          _tmpId = null;\n" +
+                "        } else {\n" +
+                "          _tmpId = _cursor.getInt(_cursorIndexOfId);\n" +
+                "        }\n" +
+                "        final String _tmpToken;\n" +
+                "        _tmpToken = _cursor.getString(_cursorIndexOfToken);\n" +
+                "        final String _tmpData_val;\n" +
+                "        _tmpData_val = _cursor.getString(_cursorIndexOfDataVal);\n" +
+                "        _result = new MCash(_tmpId,_tmpToken,_tmpData_val);\n" +
+                "      } else {\n" +
+                "        _result = null;\n" +
+                "      }\n" +
+                "      return _result;\n" +
+                "    } finally {\n" +
+                "      _cursor.close();\n" +
+                "      _statement.release();\n" +
                 "    }\n" +
                 "  }\n" +
                 "}\n";
