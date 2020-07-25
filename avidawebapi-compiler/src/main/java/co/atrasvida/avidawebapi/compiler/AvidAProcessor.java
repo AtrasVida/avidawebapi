@@ -559,7 +559,7 @@ public final class AvidAProcessor extends AbstractProcessor {
 
     String getDatabaseImplClass(String pack) {
         String fileContent = "\n" +
-                "package " + pack + "\n" +
+                "package " + pack + ";\n" +
                 "\n" +
                 "import androidx.room.DatabaseConfiguration;\n" +
                 "import androidx.room.InvalidationTracker;\n" +
