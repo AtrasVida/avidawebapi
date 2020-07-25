@@ -77,7 +77,7 @@ public final class AvidAProcessor extends AbstractProcessor {
                 FileWr(pack, "MyDisposableObserver", getDOClass(pack), roundEnvironment, it);
                 FileWr(pack, "Deserializer", getDeserializer(pack), roundEnvironment, it);
                 FileWr(pack, "AvidaAppDatabases", getDatabaseClass(pack), roundEnvironment, it);
-                FileWr(pack, "AvidaAppDatabases_Impl", getDatabaseClass(pack), roundEnvironment, it);
+                FileWrJava(pack, "AvidaAppDatabases_Impl", getDatabaseClass(pack), roundEnvironment, it);
                 FileWr(pack, "MCashDao", getMCashDaoClass(pack), roundEnvironment, it);
                 FileWr(pack, "MCash", getMCashClass(pack), roundEnvironment, it);
 
@@ -711,6 +711,22 @@ public final class AvidAProcessor extends AbstractProcessor {
         try {
             FileObject filerSourceFile = processingEnv.getFiler().createResource(StandardLocation.SOURCE_OUTPUT,
                     pack, fileName + ".kt", it);
+
+            OutputStream outputStream = filerSourceFile.openOutputStream();
+            outputStream.write(fileContent.getBytes());
+            outputStream.flush();
+            outputStream.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void FileWrJava(String pack, String fileName, String fileContent, RoundEnvironment roundEnvironment, Element it) {
+
+        try {
+            FileObject filerSourceFile = processingEnv.getFiler().createResource(StandardLocation.SOURCE_OUTPUT,
+                    pack, fileName + ".java", it);
 
             OutputStream outputStream = filerSourceFile.openOutputStream();
             outputStream.write(fileContent.getBytes());
