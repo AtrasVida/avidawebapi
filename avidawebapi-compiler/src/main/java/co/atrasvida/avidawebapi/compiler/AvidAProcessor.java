@@ -77,7 +77,7 @@ public final class AvidAProcessor extends AbstractProcessor {
                 FileWr(pack, "MyDisposableObserver", getDOClass(pack), roundEnvironment, it);
                 FileWr(pack, "Deserializer", getDeserializer(pack), roundEnvironment, it);
                 FileWr(pack, "AvidaAppDatabases", getDatabaseClass(pack), roundEnvironment, it);
-                FileWrJava(pack, "AvidaAppDatabases_Impl", getDatabaseClass(pack), roundEnvironment, it);
+                FileWrJava(pack, "AvidaAppDatabases_Impl", getDatabaseImplClass(pack), roundEnvironment, it);
                 FileWr(pack, "MCashDao", getMCashDaoClass(pack), roundEnvironment, it);
                 FileWr(pack, "MCash", getMCashClass(pack), roundEnvironment, it);
 
