@@ -63,6 +63,7 @@ public final class AvidAProcessor extends AbstractProcessor {
     @Override
     public boolean process(Set<? extends TypeElement> set, RoundEnvironment roundEnvironment) {
 
+
         for (TypeElement typeElement : set) {
             System.out.println("------------------------>" + typeElement);
         }
