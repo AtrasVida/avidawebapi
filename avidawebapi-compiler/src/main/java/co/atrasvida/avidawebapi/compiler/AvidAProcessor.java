@@ -147,19 +147,19 @@ public final class AvidAProcessor extends AbstractProcessor {
 
                 javaClass = javaClass.replace("java.lang.Object", "Any");
 
-                metodsString.append("       internal fun ").append(executableElement.getSimpleName())
-                        .append("( ").append(parametrString)
-                        .append(" onSuccess: (").append(javaClass).append(") -> Unit) ")
-                        .append(": MyDisposableObserver<").append(javaClass).append(">{\n")
-
-                        .append("        var sb = object : MyDisposableObserver<" + javaClass + ">(onSuccess) {\n" +
+                metodsString.append("\n" +
+                        "    internal fun ").append(executableElement.getSimpleName())
+                        .append("(\n        ").append(parametrString)
+                        .append("        onSuccess: (").append(javaClass).append(") -> Unit)\n        ")
+                        .append(": MyDisposableObserver<").append(javaClass).append("> {\n        ")
+                        .append("        var sb = object :\n            MyDisposableObserver<" + javaClass + ">(onSuccess) {\n" +
 
                                 "            var objByToken : MCash? = null \n \n " +
                                 "            override fun onNext(t: " + javaClass + ") {\n" +
                                 "                " + cashPolocy + " \n" +
                                 " \n" +
                                 "                if (isCacheableInitialized()) {\n" +
-                                "                    var mToken= \"" + executableElement.getSimpleName() + "\"+ mCacheableToken\n\n " +
+                                "                    var mToken= \"" + executableElement.getSimpleName() + "\"+ mCacheableToken\n\n" +
                                 "                    var objByToken =\n" +
                                 "                        AvidaAppDatabases.getInstance()!!.mCashDao().getObjByToken(mToken)\n" +
                                 "\n" +
@@ -197,7 +197,8 @@ public final class AvidAProcessor extends AbstractProcessor {
                         .append("        android.os.Handler().post {\n" +
                                 "             networkApiService!!." + executableElement.getSimpleName() + "(" + parametrStringVal + ") \n" +
                                 "            .compose(configureApiCallObserver())\n" +
-                                "            .subscribeWith(sb)\n        }\n\n")
+                                "            .subscribeWith(sb)\n" +
+                                "        }\n\n")
                         .append("        return sb" + " \n" +
                                 " }");
             }
@@ -217,16 +218,18 @@ public final class AvidAProcessor extends AbstractProcessor {
         if (type.equals("int")) return "Int";
         if (type.equals("boolean")) return "Boolean";
         if (type.equals("long")) return "Long";
-        else if (type.equals("java.lang.String")) return "kotlin.String";
+        if (type.equals("java.lang.String")) return "kotlin.String";
+        if (type.equals("java.Map")) return "Map";
         else return type;
 
     }
 
     private String getApiClientClassData(String className, String conf) {
-        return "private var networkApiService: " + className + "? = null\n" +
+        return "\n" +
+                "private var networkApiService: " + className + "? = null\n" +
                 "    private val ContentType = \"application/json\"\n" +
                 "    private val TAG = \"API_CLIENT\"\n" +
-                "    private var needToken: Boolean = true \n" +
+                "    private var needToken: Boolean \n" +
                 "    private var conf = " + conf + "()\n" +
                 "\n" +
                 "    @Throws(Exception::class)\n" +
@@ -253,11 +256,14 @@ public final class AvidAProcessor extends AbstractProcessor {
                 "    }\n" +
                 "\n" +
                 "\n" +
-                "    constructor()\n" +
+                "    constructor() {\n" +
+                "        this.needToken = true\n" +
+                "    }\n" +
                 "\n" +
                 "    constructor(needToken: Boolean) {\n" +
                 "        this.needToken = needToken\n" +
                 "    }\n" +
+                "\n" +
                 "    init {\n" +
                 "        val logging = HttpLoggingInterceptor()\n" +
                 "        if (conf.isDebugMode()) {\n" +

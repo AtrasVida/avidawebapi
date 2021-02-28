@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <bytecodeTargetLevel>
+      <module name="avidawebapi-annotations" target="1.7" />
+      <module name="avidawebapi-compiler" target="1.7" />
+      <module name="AvidAWebApi-Example.app" target="1.8" />
+      <module name="AvidAWebApi-Example.avidawebapi" target="1.8" />
+      <module name="AvidAWebApi-Example.avidawebapi-annotations" target="1.7" />
+      <module name="AvidAWebApi-Example.avidawebapi-compiler" target="1.7" />
+    </bytecodeTargetLevel>
+  </component>
+</project>
