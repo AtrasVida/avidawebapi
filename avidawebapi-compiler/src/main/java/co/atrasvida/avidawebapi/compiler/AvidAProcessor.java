@@ -258,13 +258,16 @@ public final class AvidAProcessor extends AbstractProcessor {
                 "\n" +
                 "    constructor() {\n" +
                 "        this.needToken = true\n" +
+                "        init()\n" +
                 "    }\n" +
                 "\n" +
                 "    constructor(needToken: Boolean) {\n" +
                 "        this.needToken = needToken\n" +
+                "        init()\n" +
                 "    }\n" +
                 "\n" +
-                "    init {\n" +
+                "    fun init() {\n" +
+                "\n" +
                 "        val logging = HttpLoggingInterceptor()\n" +
                 "        if (conf.isDebugMode()) {\n" +
                 "            logging.level = HttpLoggingInterceptor.Level.BODY\n" +
