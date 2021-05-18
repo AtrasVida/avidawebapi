@@ -148,7 +148,7 @@ public final class AvidAProcessor extends AbstractProcessor {
                 javaClass = javaClass.replace("java.lang.Object", "Any");
 
                 metodsString.append("\n" +
-                        "    internal fun ").append(executableElement.getSimpleName())
+                        "    fun ").append(executableElement.getSimpleName())
                         .append("(\n        ").append(parametrString)
                         .append("        onSuccess: (").append(javaClass).append(") -> Unit)\n        ")
                         .append(": MyDisposableObserver<").append(javaClass).append("> {\n        ")
